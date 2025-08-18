@@ -24,6 +24,10 @@ interface Props {
 export const LreTile: React.FC<Props> = ({ character, settings, onClick = () => {} }) => {
     const { goals, characters, mows, viewPreferences } = useContext(StoreContext);
 
+    if (character.snowprintId === 'worldTerminator') {
+        console.trace(character);
+    }
+
     // We use the current goals of the tactician, as well as the current state
     // of the character, to determine which rank to show. We also take into
     // account if the tactician has enabled goal previews.
@@ -88,10 +92,12 @@ export const LreTile: React.FC<Props> = ({ character, settings, onClick = () => 
         if (rank <= Rank.Bronze1) return Rarity.Uncommon;
         if (rank <= Rank.Silver1) return Rarity.Rare;
         if (rank <= Rank.Gold1) return Rarity.Epic;
-        return Rarity.Legendary;
+        if (rank <= Rank.Diamond3) return Rarity.Legendary;
+        return Rarity.Mythic;
     }, [rank]);
 
     const rarity = useMemo(() => {
+        // if (!character || !character.rarity) console.trace('Character has undefined rarity', character);
         return Math.max(character.rarity, rarityFromRank);
     }, [character]);
 
@@ -123,7 +129,7 @@ export const LreTile: React.FC<Props> = ({ character, settings, onClick = () => 
                     width={30}
                 />
             )}
-            {showRarity && <RarityIcon rarity={rarityFromRank} />}
+            {showRarity && <RarityIcon rarity={rarity} />}
             {settings.lreTileShowUnitRank && <RankIcon key={rank} rank={rank} />}
             {settings.lreTileShowUnitName && <span>{character.shortName || 'Invalid Unit'}</span>}
             {settings.lreTileShowUnitActiveAbility && <span>A{character.activeAbilityLevel}</span>}
