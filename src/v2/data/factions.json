@@ -7,8 +7,8 @@
     },
     {
         "alliance": "Imperial",
-        "name": "Adepta Sororitas",
-        "icon": "ADEPTA_SORORITAS.png",
+        "name": "Sisterhood",
+        "icon": "Adepta Sororitas.png",
         "color": "#962C38"
     },
     {
@@ -19,20 +19,20 @@
     },
     {
         "alliance": "Imperial",
-        "name": "Astra Militarum",
-        "icon": "Astra_militarum.png",
+        "name": "AstraMilitarum",
+        "icon": "Astra Militarum.png",
         "color": "#717838"
     },
     {
         "alliance": "Chaos",
-        "name": "Black Legion",
-        "icon": "Black_Legion.png",
+        "name": "BlackLegion",
+        "icon": "Black Legion.png",
         "color": "#1C0F10"
     },
     {
         "alliance": "Chaos",
-        "name": "Death guard",
-        "icon": "Death_Guard.png",
+        "name": "DeathGuard",
+        "icon": "Death guard.png",
         "color": "#65540C"
     },
     {
@@ -43,8 +43,8 @@
     },
     {
         "alliance": "Imperial",
-        "name": "Black Templars",
-        "icon": "Black_Templars.png",
+        "name": "BlackTemplars",
+        "icon": "Black Templars.png",
         "color": "#929395"
     },
     {
@@ -55,26 +55,26 @@
     },
     {
         "alliance": "Xenos",
-        "name": "T'au Empire",
-        "icon": "T_Au.png",
+        "name": "Tau",
+        "icon": "T'au Empire.png",
         "color": "#CE7140"
     },
     {
         "alliance": "Imperial",
-        "name": "Space Wolves",
-        "icon": "Space_Wolves.png",
+        "name": "SpaceWolves",
+        "icon": "Space Wolves.png",
         "color": "#084A92"
     },
     {
         "alliance": "Chaos",
-        "name": "Thousand Sons",
-        "icon": "Thousand_Sons.png",
+        "name": "ThousandSons",
+        "icon": "Thousand Sons.png",
         "color": "#084A92"
     },
     {
         "alliance": "Imperial",
-        "name": "Dark Angels",
-        "icon": "Dark_Angels.png",
+        "name": "DarkAngels",
+        "icon": "Dark Angels.png",
         "color": "#18542B"
     },
     {
@@ -85,37 +85,37 @@
     },
     {
         "alliance": "Imperial",
-        "name": "Adeptus Mechanicus",
-        "icon": "AdeptusMechanicus.png",
+        "name": "AdeptusMechanicus",
+        "icon": "Adeptus Mechanicus.png",
         "color": "#781e2e"
     },
     {
         "alliance": "Chaos",
-        "name": "World Eaters",
-        "icon": "worldeaters.png",
+        "name": "WorldEaters",
+        "icon": "World Eaters.png",
         "color": "#511011"
     },
     {
         "alliance": "Imperial",
-        "name": "Blood Angels",
-        "icon": "blood_angels.png",
+        "name": "BloodAngels",
+        "icon": "Blood Angels.png",
         "color": "#ac1b1a"
     },
     {
         "alliance": "Xenos",
-        "name": "Genestealer Cults",
+        "name": "Genestealers",
         "icon": "Genestealer Cults.png",
         "color": "#CE7140"
     },
     {
         "alliance": "Imperial",
-        "name": "Adeptus Custodes",
+        "name": "Custodes",
         "icon": "Adeptus Custodes.png",
         "color": "#652129"
     },
     {
         "alliance": "Chaos",
-        "name": "Emperor's Children",
+        "name": "EmperorsChildren",
         "icon": "Emperor's Children.png",
         "color": "#874470"
     }

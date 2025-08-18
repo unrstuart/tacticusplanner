@@ -2,8 +2,11 @@
 
 import { getImageUrl } from '@/fsd/5-shared/ui';
 
-export const FactionImage = ({ faction }: { faction: string }) => {
-    const imageUrl = getImageUrl(`factions/${faction}.png`);
+export const FactionImage = ({ faction, icon }: { faction: string; icon?: string }) => {
+    // Use the provided icon filename or fallback to faction name
+    const iconFilename = icon || `${faction}.png`;
+
+    const imageUrl = getImageUrl(`factions/${iconFilename}`);
 
     return (
         <img
