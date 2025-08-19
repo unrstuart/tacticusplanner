@@ -82,6 +82,7 @@ export class GoalsService {
                 unitId: unit.id,
                 unitName: unit.name,
                 unitIcon: unit.badgeIcon,
+                unitRoundIcon: unit.badgeIcon,
                 notes: g.notes ?? '',
                 unitAlliance: unit.alliance,
             };
@@ -126,6 +127,7 @@ export class GoalsService {
                 unitId: unit.id,
                 unitName: unit.name,
                 unitIcon: unit.icon,
+                unitRoundIcon: unit.roundIcon,
                 unitAlliance: unit.alliance,
                 notes: g.notes ?? '',
             };
