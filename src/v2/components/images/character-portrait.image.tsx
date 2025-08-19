@@ -7,7 +7,6 @@ interface Props {
 }
 
 export const CharacterPortraitImage = React.forwardRef<HTMLImageElement, Props>((props, ref) => {
-
     // Determine the correct path based on whether it's a snowprint asset or a simple filename
     const imagePath = props.icon.includes('snowprint_assets/')
         ? props.icon // Use full snowprint path as-is
@@ -21,7 +20,6 @@ export const CharacterPortraitImage = React.forwardRef<HTMLImageElement, Props>(
         imagePath: imagePath,
         resolvedUrl: imageUrl,
     });
-
 
     return (
         <img
