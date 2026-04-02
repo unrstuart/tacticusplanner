@@ -1,0 +1,840 @@
+{
+    "m_Enabled": 1,
+    "m_Name": "GB_Belisarius_support_03",
+    "Id": "GB_Belisarius_support_03",
+    "Width": 7,
+    "Height": 10,
+    "Tiles": [
+        {
+            "Tile": [
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Block",
+                    "Elevation": 4,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Block",
+                    "Elevation": 4,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 2,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Block",
+                    "Elevation": 2,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                }
+            ]
+        },
+        {
+            "Tile": [
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 2,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "DryBush",
+                    "Elevation": 2,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Block",
+                    "Elevation": 4,
+                    "Rotation": 5,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                }
+            ]
+        },
+        {
+            "Tile": [
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "DryBush",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 2,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                }
+            ]
+        },
+        {
+            "Tile": [
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                }
+            ]
+        },
+        {
+            "Tile": [
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 5,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Bridge",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "DryBush",
+                    "Elevation": 1,
+                    "Rotation": 2,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 1,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 3,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                }
+            ]
+        },
+        {
+            "Tile": [
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 0,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 1
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 3,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                }
+            ]
+        },
+        {
+            "Tile": [
+                {
+                    "TileId": "Grass",
+                    "Elevation": 0,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 1
+                },
+                {
+                    "TileId": "Block",
+                    "Elevation": 0,
+                    "Rotation": 3,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Block",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 4,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 3,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Block",
+                    "Elevation": 3,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 2,
+                    "Rotation": 0,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Block",
+                    "Elevation": 2,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                },
+                {
+                    "TileId": "Grass",
+                    "Elevation": 4,
+                    "Rotation": 1,
+                    "RoomID": -1,
+                    "ForceUnplayable": 0
+                }
+            ]
+        }
+    ],
+    "SpawnPointSets": [
+        {
+            "SpawnPointGroups": [
+                {
+                    "TeamWithPlayerIndex": 0,
+                    "MachineOfWarPosition": 2,
+                    "SpawnPoints": [
+                        {
+                            "Column": 1,
+                            "Row": 0,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 0,
+                            "Row": 0,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 1,
+                            "Row": 1,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 3,
+                            "Row": 0,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 2,
+                            "Row": 0,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        }
+                    ]
+                },
+                {
+                    "TeamWithPlayerIndex": 1,
+                    "MachineOfWarPosition": 1,
+                    "SpawnPoints": [
+                        {
+                            "Column": 6,
+                            "Row": 4,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 2,
+                            "Row": 6,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 4,
+                            "Row": 8,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 5,
+                            "Row": 5,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 5,
+                            "Row": 7,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        }
+                    ]
+                }
+            ],
+            "TileEffectSpawnPoints": [
+                {
+                    "Column": 5,
+                    "Row": 3,
+                    "EffectType": 1244,
+                    "Turns": 4
+                },
+                {
+                    "Column": 5,
+                    "Row": 7,
+                    "EffectType": 1244,
+                    "Turns": 4
+                },
+                {
+                    "Column": 1,
+                    "Row": 3,
+                    "EffectType": 1244,
+                    "Turns": 4
+                },
+                {
+                    "Column": 0,
+                    "Row": 8,
+                    "EffectType": 5,
+                    "Turns": 4
+                },
+                {
+                    "Column": 5,
+                    "Row": 9,
+                    "EffectType": 5,
+                    "Turns": 4
+                }
+            ],
+            "GameModeTiles": [],
+            "OverrideDeploymentCameraZ": 0,
+            "DeploymentCameraZ": 0
+        },
+        {
+            "SpawnPointGroups": [
+                {
+                    "TeamWithPlayerIndex": 0,
+                    "MachineOfWarPosition": 2,
+                    "SpawnPoints": [
+                        {
+                            "Column": 1,
+                            "Row": 1,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 2,
+                            "Row": 0,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 1,
+                            "Row": 0,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 3,
+                            "Row": 1,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 3,
+                            "Row": 0,
+                            "Direction": 0,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        }
+                    ]
+                },
+                {
+                    "TeamWithPlayerIndex": 1,
+                    "MachineOfWarPosition": 1,
+                    "SpawnPoints": [
+                        {
+                            "Column": 3,
+                            "Row": 7,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 5,
+                            "Row": 4,
+                            "Direction": 4,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 5,
+                            "Row": 8,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 0,
+                            "Row": 5,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 5,
+                            "Row": 5,
+                            "Direction": 4,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 2,
+                            "Row": 5,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 3,
+                            "Row": 5,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 1,
+                            "Row": 4,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 2,
+                            "Row": 3,
+                            "Direction": 3,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        },
+                        {
+                            "Column": 5,
+                            "Row": 3,
+                            "Direction": 4,
+                            "Room": -1,
+                            "SpawnPointType": 0,
+                            "Tag": "",
+                            "SecondarySpawn": 0
+                        }
+                    ]
+                }
+            ],
+            "TileEffectSpawnPoints": [],
+            "GameModeTiles": [],
+            "OverrideDeploymentCameraZ": 0,
+            "DeploymentCameraZ": 0
+        }
+    ],
+    "BossPlatforms": [
+        {
+            "Size": 1,
+            "Tiles": [
+                {
+                    "Column": 3,
+                    "Row": 8
+                }
+            ],
+            "InitialSpawnPosition": 1,
+            "Direction": -1
+        }
+    ],
+    "Doors": [],
+    "TreasureBeachWaveHeight": 0
+}

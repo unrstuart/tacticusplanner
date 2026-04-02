@@ -20,6 +20,7 @@ import { campaignProgressionLazyRoute } from '@/fsd/1-pages/plan-campaign-progre
 import { cesRoute } from '@/fsd/1-pages/plan-ces/ces.route';
 import { lreLazyRoute } from '@/fsd/1-pages/plan-lre';
 import { questsRoute } from '@/fsd/1-pages/plan-quests/quests.route';
+import { raidHitRoute } from '@/fsd/1-pages/plan-raid-hit/raid-hit.route';
 import { teams2Route } from '@/fsd/1-pages/plan-teams2/teams2.route';
 import { warDefense2Route } from '@/fsd/1-pages/plan-war-defense-2/war-defense2.route';
 import { warOffense2Route } from '@/fsd/1-pages/plan-war-offense2/war-offense2.route';
@@ -78,6 +79,7 @@ export const globalPlanRoutes: RouteObject[] = [
     },
     campaignProgressionLazyRoute,
     questsRoute,
+    raidHitRoute,
     cesRoute,
     {
         path: 'plan/hse',
