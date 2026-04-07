@@ -1,9 +1,12 @@
 /* eslint-disable import-x/no-internal-modules */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { StoreContext } from '@/reducers/store.provider';
 import { getImageUrl } from '@/shared-logic/functions';
 
-import { FactionId } from '@/fsd/5-shared/model';
+import { FactionId, Rank, Rarity, RarityStars, rankToString } from '@/fsd/5-shared/model';
+
+import { CharactersService } from '@/fsd/4-entities/character';
 
 import raidHitData from '@/fsd/1-pages/plan-raid-hit/data/raid-hit.json';
 
@@ -25,9 +28,11 @@ import {
     tileCenter,
 } from './hex-map-core';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// DUMMY DATA  (replace with real imports / fetched data)
-// ─────────────────────────────────────────────────────────────────────────────
+// TODOs
+// Import character stats
+// Use equipment
+// Define abilities
+// Simulate hits
 
 interface Boss {
     id: string;
@@ -43,7 +48,22 @@ interface Prime {
     bossId: string;
 }
 
-const DUMMY_BOSSES: Boss[] = [
+const ALLOWED_CHARS = new Set<string>([
+    'custoBladeChampion',
+    'custoTrajann',
+    'worldKharn',
+    'custoAtlacoya',
+    'custoVexilusPraetor',
+    'templHelbrecht',
+    'votanUthar',
+    'bloodDante',
+    'spaceBlackmane',
+    'admecDominus',
+    'orksWarboss',
+    'emperExultant',
+]);
+
+const BOSS_INFO: Boss[] = [
     {
         id: 'boss_death_guard',
         name: 'Mortarion',
@@ -57,7 +77,7 @@ const DUMMY_BOSSES: Boss[] = [
         name: 'Magnus the Red',
         faction: 'Thousand Sons',
         map_prefix: 'GB_Magnus',
-        image_name: 'GuildBoss9Boss1ThousMagnus_GameModeHead.png',
+        image_name: 'GuildBoss9Boss1ThousMagnus_GameModeHead',
         tiles: 7,
     },
     {
@@ -119,42 +139,120 @@ interface SelectProps<T extends string> {
     label: string;
     value: T | '';
     onChange: (value: T | '') => void;
-    options: Array<{ value: T; label: string; sub?: string }>;
+    options: Array<{ value: T; label: string; sub?: string; imageUrl?: string }>;
     placeholder: string;
     disabled?: boolean;
 }
 
+const CHEVRON_SVG = (
+    <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#c8a84b]">
+        <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
+            <path
+                d="M1 1L6 7L11 1"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+            />
+        </svg>
+    </span>
+);
+
 function Select<T extends string>({ label, value, onChange, options, placeholder, disabled }: SelectProps<T>) {
+    const hasImages = options.some(o => o.imageUrl);
+    const [isOpen, setIsOpen] = useState(false);
+    const selectedOption = options.find(o => o.value === value);
+
+    if (!hasImages) {
+        return (
+            <div className="flex min-w-[200px] flex-1 flex-col gap-[6px]">
+                <label className="font-[Rajdhani] text-[10px] font-semibold tracking-[0.18em] text-[#c8a84b] uppercase">
+                    {label}
+                </label>
+                <div className={`relative${disabled ? 'pointer-events-none opacity-40' : ''}`}>
+                    <select
+                        value={value}
+                        onChange={event => onChange((event.target.value || '') as T | '')}
+                        disabled={disabled}
+                        className="w-full cursor-pointer appearance-none rounded-[6px] border border-[#2e3352] bg-[#0b0c10] py-[9px] pr-9 pl-3 font-[Nunito] text-[13px] font-medium text-[#d4d8e8] transition-[border-color,box-shadow] duration-150 outline-none hover:border-[#c8a84b] focus:border-[#c8a84b] focus:shadow-[0_0_0_2px_rgba(200,168,75,0.12)]">
+                        <option value="">{placeholder}</option>
+                        {options.map(o => (
+                            <option key={o.value} value={o.value}>
+                                {o.label}
+                                {o.sub ? ` — ${o.sub}` : ''}
+                            </option>
+                        ))}
+                    </select>
+                    {CHEVRON_SVG}
+                </div>
+            </div>
+        );
+    }
+
+    // Custom image-capable dropdown
     return (
         <div className="flex min-w-[200px] flex-1 flex-col gap-[6px]">
             <label className="font-[Rajdhani] text-[10px] font-semibold tracking-[0.18em] text-[#c8a84b] uppercase">
                 {label}
             </label>
             <div className={`relative${disabled ? 'pointer-events-none opacity-40' : ''}`}>
-                <select
-                    value={value}
-                    onChange={event => onChange((event.target.value || '') as T | '')}
-                    disabled={disabled}
-                    className="w-full cursor-pointer appearance-none rounded-[6px] border border-[#2e3352] bg-[#0b0c10] py-[9px] pr-9 pl-3 font-[Nunito] text-[13px] font-medium text-[#d4d8e8] transition-[border-color,box-shadow] duration-150 outline-none hover:border-[#c8a84b] focus:border-[#c8a84b] focus:shadow-[0_0_0_2px_rgba(200,168,75,0.12)]">
-                    <option value="">{placeholder}</option>
-                    {options.map(o => (
-                        <option key={o.value} value={o.value}>
-                            {o.label}
-                            {o.sub ? ` — ${o.sub}` : ''}
-                        </option>
-                    ))}
-                </select>
-                <span className="pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 text-[#c8a84b]">
-                    <svg width="12" height="8" viewBox="0 0 12 8" fill="none">
-                        <path
-                            d="M1 1L6 7L11 1"
-                            stroke="currentColor"
-                            strokeWidth="1.5"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(previous => !previous)}
+                    onBlur={() => setIsOpen(false)}
+                    className="flex w-full cursor-pointer items-center gap-2 rounded-[6px] border border-[#2e3352] bg-[#0b0c10] py-[7px] pr-9 pl-3 font-[Nunito] text-[13px] font-medium transition-[border-color,box-shadow] duration-150 outline-none hover:border-[#c8a84b] focus:border-[#c8a84b] focus:shadow-[0_0_0_2px_rgba(200,168,75,0.12)]">
+                    {selectedOption?.imageUrl && (
+                        <img
+                            src={selectedOption.imageUrl}
+                            alt=""
+                            className="h-[22px] w-[44px] shrink-0 rounded-sm object-cover"
                         />
-                    </svg>
-                </span>
+                    )}
+                    <span className={selectedOption ? 'text-[#d4d8e8]' : 'text-[#5c6280]'}>
+                        {selectedOption ? selectedOption.label : placeholder}
+                    </span>
+                </button>
+                {CHEVRON_SVG}
+                {isOpen && (
+                    <div className="absolute top-full right-0 left-0 z-50 mt-1 overflow-hidden rounded-[6px] border border-[#2e3352] bg-[#0d0f1a] shadow-[0_8px_32px_rgba(0,0,0,0.5)]">
+                        <div
+                            role="option"
+                            aria-selected={!value}
+                            onMouseDown={event => event.preventDefault()}
+                            onClick={() => {
+                                onChange('' as T | '');
+                                setIsOpen(false);
+                            }}
+                            className="cursor-pointer px-3 py-2 text-[13px] text-[#5c6280] hover:bg-[#1a1e30]">
+                            {placeholder}
+                        </div>
+                        {options.map(o => (
+                            <div
+                                key={o.value}
+                                role="option"
+                                aria-selected={o.value === value}
+                                onMouseDown={event => event.preventDefault()}
+                                onClick={() => {
+                                    onChange(o.value);
+                                    setIsOpen(false);
+                                }}
+                                className={`flex cursor-pointer items-center gap-2 px-3 py-[7px] text-[13px] font-medium transition-colors ${
+                                    o.value === value
+                                        ? 'bg-[#1a1e30] text-[#c8a84b]'
+                                        : 'text-[#d4d8e8] hover:bg-[#1a1e30]'
+                                }`}>
+                                {o.imageUrl && (
+                                    <img
+                                        src={o.imageUrl}
+                                        alt=""
+                                        className="h-[24px] w-[48px] shrink-0 rounded-sm object-cover"
+                                    />
+                                )}
+                                <span>{o.label}</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -388,6 +486,96 @@ const BOSS_DRAG_VALID_STROKE = 'rgba(60, 120, 255, 0.60)';
 const BOSS_DRAG_INVALID_FILL = 'rgba(255, 60, 60, 0.18)';
 const BOSS_DRAG_INVALID_STROKE = 'rgba(255, 80, 80, 0.50)';
 
+/** Character tile colors */
+const CHAR_PLACED_FILL = 'rgba(30, 180, 60, 0.65)';
+const CHAR_PLACED_STROKE = 'rgba(80, 255, 100, 0.90)';
+const CHAR_DRAG_VALID_FILL = 'rgba(30, 180, 60, 0.25)';
+const CHAR_DRAG_VALID_STROKE = 'rgba(80, 255, 100, 0.55)';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CHARACTER PLACEMENT TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** One character slot in the raid planner. */
+interface PlacedCharacter {
+    slotId: number;
+    charId: string; // snowprintId from ALLOWED_CHARS
+    roundIcon: string; // for SVG portrait rendering
+    tile: HexTile;
+    rank: Rank;
+    rarity: Rarity;
+    stars: RarityStars;
+    activeAbilityLevel: number;
+    passiveAbilityLevel: number;
+}
+
+interface CharDragState {
+    slotId: number;
+    offsetX: number;
+    offsetY: number;
+    candidateTile: HexTile;
+    isValid: boolean;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COMPACT SELECT OPTIONS  (reused in character slot rows in RaidHit)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RANK_OPTIONS = [
+    Rank.Stone1,
+    Rank.Stone2,
+    Rank.Stone3,
+    Rank.Iron1,
+    Rank.Iron2,
+    Rank.Iron3,
+    Rank.Bronze1,
+    Rank.Bronze2,
+    Rank.Bronze3,
+    Rank.Silver1,
+    Rank.Silver2,
+    Rank.Silver3,
+    Rank.Gold1,
+    Rank.Gold2,
+    Rank.Gold3,
+    Rank.Diamond1,
+    Rank.Diamond2,
+    Rank.Diamond3,
+    Rank.Adamantine1,
+    Rank.Adamantine2,
+    Rank.Adamantine3,
+].map(r => ({ value: String(r), label: rankToString(r) }));
+
+const RARITY_OPTIONS = [
+    { value: String(Rarity.Common), label: 'Common' },
+    { value: String(Rarity.Uncommon), label: 'Uncommon' },
+    { value: String(Rarity.Rare), label: 'Rare' },
+    { value: String(Rarity.Epic), label: 'Epic' },
+    { value: String(Rarity.Legendary), label: 'Legendary' },
+    { value: String(Rarity.Mythic), label: 'Mythic' },
+];
+
+const STARS_LABELS: Record<number, string> = {
+    0: '0★',
+    1: '1★',
+    2: '2★',
+    3: '3★',
+    4: '4★',
+    5: '5★',
+    6: 'R1★',
+    7: 'R2★',
+    8: 'R3★',
+    9: 'R4★',
+    10: 'R5★',
+    11: 'B1★',
+    12: 'B2★',
+    13: 'B3★',
+    14: '🌟',
+};
+const STARS_OPTIONS = Array.from({ length: 15 }, (_, index) => ({
+    value: String(index),
+    label: STARS_LABELS[index] ?? String(index),
+}));
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAP PREVIEW
 // ─────────────────────────────────────────────────────────────────────────────
@@ -396,6 +584,9 @@ interface HexMapPreviewProps {
     mapId: string;
     bossSize: 1 | 3 | 7;
     bossImageName?: string;
+    placedCharacters?: PlacedCharacter[];
+    onCharacterMoved?: (slotId: number, tile: HexTile) => void;
+    onMapReady?: (tiles: HexTile[], metrics: HexMetrics) => void;
     onHexClick?: (logicalCol: number, logicalRow: number) => void;
     onBossPlaced?: (position: BossPosition) => void;
 }
@@ -425,7 +616,7 @@ interface DragState {
 function footprintImageLayout(
     footprint: HexTile[],
     metrics: HexMetrics,
-    imgAspect = 2
+    imgAspect = 1
 ): { clipPolygons: string[]; imgX: number; imgY: number; imgW: number; imgH: number } {
     let minX = Infinity,
         maxX = -Infinity,
@@ -462,11 +653,34 @@ function footprintImageLayout(
     return { clipPolygons, imgX: cx - imgW / 2, imgY: cy - imgH / 2, imgW, imgH };
 }
 
+/**
+ * Return the tile that is most south-west among playable tiles not in `excludeKeys`.
+ * Sort key: highest pixel Y (most south) first, then lowest pixel X (most west).
+ */
+function findSwTile(tiles: HexTile[], metrics: HexMetrics, excludeKeys: Set<string>): HexTile | undefined {
+    const available = tiles.filter(t => !excludeKeys.has(`${t.vCol},${t.vRow}`));
+    if (available.length === 0) return undefined;
+    return available.toSorted((a, b) => {
+        const pa = tileCenter(metrics, a.vCol, a.vRow, a.elevation);
+        const pb = tileCenter(metrics, b.vCol, b.vRow, b.elevation);
+        return pb.y - pa.y || pa.x - pb.x;
+    })[0];
+}
+
 function getBossImageUrl(name: string) {
     return getImageUrl(`snowprint_assets/guild_boss/${name}.png`);
 }
 
-function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlaced }: HexMapPreviewProps) {
+function HexMapPreview({
+    mapId,
+    bossSize,
+    bossImageName,
+    placedCharacters,
+    onCharacterMoved,
+    onMapReady,
+    onHexClick,
+    onBossPlaced,
+}: HexMapPreviewProps) {
     const [tiles, setTiles] = useState<HexTile[]>([]);
     const [metrics, setMetrics] = useState<HexMetrics>();
     const [isLoading, setIsLoading] = useState(false);
@@ -475,6 +689,7 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
     // Boss placement
     const [bossPlacement, setBossPlacement] = useState<{ center: HexTile; rotation: number } | undefined>();
     const [dragState, setDragState] = useState<DragState | undefined>();
+    const [charDragState, setCharDragState] = useState<CharDragState | undefined>();
     const svgReference = useRef<SVGSVGElement>(null);
 
     // tileMap: vCol,vRow → HexTile
@@ -514,6 +729,17 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
                 ? footprintImageLayout(dragState.footprint, metrics)
                 : undefined,
         [dragState, metrics]
+    );
+
+    // Keys of placed characters — excluding any char currently being dragged
+    const charTileKeySet = useMemo(
+        () =>
+            new Set(
+                (placedCharacters ?? [])
+                    .filter(c => c.slotId !== charDragState?.slotId)
+                    .map(c => `${c.tile.vCol},${c.tile.vRow}`)
+            ),
+        [placedCharacters, charDragState]
     );
 
     useEffect(() => {
@@ -582,6 +808,7 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
                             rotation: placement.rotation,
                         });
                     }
+                    onMapReady?.(result, m);
                 }
             } catch {
                 if (!cancelled) setIsLoading(false);
@@ -609,105 +836,140 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
 
     const handlePointerDown = useCallback(
         (event: React.PointerEvent<SVGPolygonElement>, tile: HexTile) => {
-            if (!bossPlacement || !metrics) return;
+            if (!metrics) return;
             const tileKey = `${tile.vCol},${tile.vRow}`;
-            if (!placedFootprintKeys.has(tileKey)) return; // only drag from boss tiles
 
-            event.currentTarget.setPointerCapture(event.pointerId);
-            event.stopPropagation();
+            // Boss drag — takes priority over character drag
+            if (bossPlacement && placedFootprintKeys.has(tileKey)) {
+                event.currentTarget.setPointerCapture(event.pointerId);
+                event.stopPropagation();
+                const svgPt = toSvgPoint(event.clientX, event.clientY);
+                if (!svgPt) return;
+                const fp = getFootprint(bossPlacement.center, bossPlacement.rotation, tileMap, bossSize);
+                const referencePx =
+                    bossSize === 3 && fp
+                        ? tileCentroid(fp, metrics)
+                        : tileCenter(
+                              metrics,
+                              bossPlacement.center.vCol,
+                              bossPlacement.center.vRow,
+                              bossPlacement.center.elevation
+                          );
+                setDragState({
+                    offsetX: referencePx.x - svgPt.x,
+                    offsetY: referencePx.y - svgPt.y,
+                    candidateCenter: bossPlacement.center,
+                    candidateRotation: bossPlacement.rotation,
+                    isValid: isValidFootprint(fp),
+                    footprint: fp,
+                });
+                return;
+            }
 
-            // Offset = boss reference point minus pointer position (in SVG space).
-            // For 3-tile we anchor to the footprint centroid so that drag direction
-            // naturally controls rotation; for 1/7-tile we anchor to the center tile.
-            const svgPt = toSvgPoint(event.clientX, event.clientY);
-            if (!svgPt) return;
-
-            const fp = getFootprint(bossPlacement.center, bossPlacement.rotation, tileMap, bossSize);
-            const referencePx =
-                bossSize === 3 && fp
-                    ? tileCentroid(fp, metrics)
-                    : tileCenter(
-                          metrics,
-                          bossPlacement.center.vCol,
-                          bossPlacement.center.vRow,
-                          bossPlacement.center.elevation
-                      );
-            const offsetX = referencePx.x - svgPt.x;
-            const offsetY = referencePx.y - svgPt.y;
-            setDragState({
-                offsetX,
-                offsetY,
-                candidateCenter: bossPlacement.center,
-                candidateRotation: bossPlacement.rotation,
-                isValid: isValidFootprint(fp),
-                footprint: fp,
-            });
+            // Character drag
+            const charEntry = (placedCharacters ?? []).find(c => `${c.tile.vCol},${c.tile.vRow}` === tileKey);
+            if (charEntry) {
+                event.currentTarget.setPointerCapture(event.pointerId);
+                event.stopPropagation();
+                const svgPt = toSvgPoint(event.clientX, event.clientY);
+                if (!svgPt) return;
+                const { x, y } = tileCenter(metrics, tile.vCol, tile.vRow, tile.elevation);
+                setCharDragState({
+                    slotId: charEntry.slotId,
+                    offsetX: x - svgPt.x,
+                    offsetY: y - svgPt.y,
+                    candidateTile: tile,
+                    isValid: true,
+                });
+            }
         },
-        [bossPlacement, metrics, placedFootprintKeys, toSvgPoint, tileMap, bossSize]
+        [bossPlacement, metrics, placedFootprintKeys, toSvgPoint, tileMap, bossSize, placedCharacters]
     );
 
     const handlePointerMove = useCallback(
         (event: React.PointerEvent<SVGSVGElement>) => {
-            if (!dragState || !metrics || tiles.length === 0) return;
+            if (!metrics || tiles.length === 0) return;
 
-            const svgPt = toSvgPoint(event.clientX, event.clientY);
-            if (!svgPt) return;
-
-            // Project the boss reference point to where it should be at the new pointer position.
-            // offsetX/Y is (refPoint - pointerAtDragStart), so refPoint = pointer + offset.
-            const projected = { x: svgPt.x + dragState.offsetX, y: svgPt.y + dragState.offsetY };
-
-            // Anchor tile: nearest playable tile to the projected reference.
-            const anchorTile = nearestTile(projected.x, projected.y, tiles, metrics);
-
-            let candidateCenter: HexTile;
-            let rotation: number;
-            let footprint: HexTile[] | undefined;
-            let isValid: boolean;
-
-            if (bossSize === 3) {
-                // Use centroid-projection: find the (center, rotation) whose tile
-                // centroid is closest to the projected point.
-                const result = bestPlacement3(projected, anchorTile, tileMap, metrics);
-                candidateCenter = result.center;
-                rotation = result.rotation;
-                footprint = result.footprint;
-                isValid = result.isValid;
-            } else {
-                candidateCenter = anchorTile;
-                rotation = dragState.candidateRotation;
-                footprint = getFootprint(candidateCenter, rotation, tileMap, bossSize);
-                isValid = isValidFootprint(footprint);
+            // Boss drag
+            if (dragState) {
+                const svgPt = toSvgPoint(event.clientX, event.clientY);
+                if (!svgPt) return;
+                const projected = { x: svgPt.x + dragState.offsetX, y: svgPt.y + dragState.offsetY };
+                const anchorTile = nearestTile(projected.x, projected.y, tiles, metrics);
+                let candidateCenter: HexTile;
+                let rotation: number;
+                let footprint: HexTile[] | undefined;
+                let isValid: boolean;
+                if (bossSize === 3) {
+                    const result = bestPlacement3(projected, anchorTile, tileMap, metrics);
+                    candidateCenter = result.center;
+                    rotation = result.rotation;
+                    footprint = result.footprint;
+                    isValid = result.isValid;
+                } else {
+                    candidateCenter = anchorTile;
+                    rotation = dragState.candidateRotation;
+                    footprint = getFootprint(candidateCenter, rotation, tileMap, bossSize);
+                    isValid = isValidFootprint(footprint);
+                }
+                setDragState(previous =>
+                    previous
+                        ? { ...previous, candidateCenter, candidateRotation: rotation, footprint, isValid }
+                        : undefined
+                );
+                return;
             }
 
-            setDragState(previous =>
-                previous ? { ...previous, candidateCenter, candidateRotation: rotation, footprint, isValid } : undefined
-            );
+            // Character drag
+            if (charDragState) {
+                const svgPt = toSvgPoint(event.clientX, event.clientY);
+                if (!svgPt) return;
+                const projected = {
+                    x: svgPt.x + charDragState.offsetX,
+                    y: svgPt.y + charDragState.offsetY,
+                };
+                const candidateTile = nearestTile(projected.x, projected.y, tiles, metrics);
+                const candidateKey = `${candidateTile.vCol},${candidateTile.vRow}`;
+                const isBossTile = placedFootprintKeys.has(candidateKey);
+                const isOtherCharTile = (placedCharacters ?? []).some(
+                    c => c.slotId !== charDragState.slotId && `${c.tile.vCol},${c.tile.vRow}` === candidateKey
+                );
+                const isValid = !isBossTile && !isOtherCharTile;
+                setCharDragState(previous => (previous ? { ...previous, candidateTile, isValid } : undefined));
+            }
         },
-        [dragState, metrics, tiles, toSvgPoint, bossSize, tileMap]
+        [dragState, charDragState, metrics, tiles, toSvgPoint, bossSize, tileMap, placedCharacters, placedFootprintKeys]
     );
 
     const handlePointerUp = useCallback(
         (event: React.PointerEvent<SVGSVGElement>) => {
-            if (!dragState) return;
+            if (!dragState && !charDragState) return;
             event.stopPropagation();
 
-            if (dragState.isValid && dragState.footprint) {
-                const newPlacement = {
-                    center: dragState.candidateCenter,
-                    rotation: dragState.candidateRotation,
-                };
-                setBossPlacement(newPlacement);
-                onBossPlaced?.({
-                    logicalCol: newPlacement.center.logicalCol,
-                    logicalRow: newPlacement.center.logicalRow,
-                    rotation: newPlacement.rotation,
-                });
+            if (dragState) {
+                if (dragState.isValid && dragState.footprint) {
+                    const newPlacement = {
+                        center: dragState.candidateCenter,
+                        rotation: dragState.candidateRotation,
+                    };
+                    setBossPlacement(newPlacement);
+                    onBossPlaced?.({
+                        logicalCol: newPlacement.center.logicalCol,
+                        logicalRow: newPlacement.center.logicalRow,
+                        rotation: newPlacement.rotation,
+                    });
+                }
+                setDragState(undefined);
             }
-            // If invalid: keep existing placement (don't update)
-            setDragState(undefined);
+
+            if (charDragState) {
+                if (charDragState.isValid) {
+                    onCharacterMoved?.(charDragState.slotId, charDragState.candidateTile);
+                }
+                setCharDragState(undefined);
+            }
         },
-        [dragState, onBossPlaced]
+        [dragState, charDragState, onBossPlaced, onCharacterMoved]
     );
 
     const imageSource = getImageUrl(`snowprint_assets/maps/${mapId}_Visual.png`);
@@ -747,13 +1009,33 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
                                     inset: 0,
                                     width: '100%',
                                     height: '100%',
-                                    cursor: dragState ? 'grabbing' : 'default',
+                                    cursor: dragState || charDragState ? 'grabbing' : 'default',
                                     userSelect: 'none',
                                     touchAction: 'none',
                                 }}
                                 onPointerMove={handlePointerMove}
                                 onPointerUp={handlePointerUp}
                                 onPointerCancel={handlePointerUp}>
+                                {/* Clip-path definitions for boss images and character portraits */}
+                                <defs>
+                                    {metrics &&
+                                        (placedCharacters ?? []).map(char => {
+                                            const isDragging = charDragState?.slotId === char.slotId;
+                                            const displayTile = isDragging ? charDragState!.candidateTile : char.tile;
+                                            const { x, y } = tileCenter(
+                                                metrics,
+                                                displayTile.vCol,
+                                                displayTile.vRow,
+                                                displayTile.elevation
+                                            );
+                                            const r = metrics.hexHeight * HEX_DRAW_SCALE * 0.42;
+                                            return (
+                                                <clipPath key={char.slotId} id={`char-portrait-clip-${char.slotId}`}>
+                                                    <circle cx={x} cy={y} r={r} />
+                                                </clipPath>
+                                            );
+                                        })}
+                                </defs>
                                 {tiles.map(tile => {
                                     const { x, y } = tileCenter(metrics, tile.vCol, tile.vRow, tile.elevation);
                                     const verts = hexVerts(metrics, x, y, HEX_DRAW_SCALE);
@@ -762,6 +1044,11 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
                                     const isHovered = hoveredKey === tileKey;
                                     const isPlacedBoss = placedFootprintKeys.has(tileKey) && !dragState;
                                     const isDragBoss = dragState && dragFootprintKeys.has(tileKey);
+                                    const isPlacedChar = charTileKeySet.has(tileKey);
+                                    const isDragChar =
+                                        charDragState &&
+                                        `${charDragState.candidateTile.vCol},${charDragState.candidateTile.vRow}` ===
+                                            tileKey;
 
                                     let fill: string;
                                     let stroke: string;
@@ -776,6 +1063,17 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
                                     } else if (isDragBoss) {
                                         fill = dragState.isValid ? BOSS_DRAG_VALID_FILL : BOSS_DRAG_INVALID_FILL;
                                         stroke = dragState.isValid ? BOSS_DRAG_VALID_STROKE : BOSS_DRAG_INVALID_STROKE;
+                                        strokeWidth = HIGHLIGHT_WIDTH;
+                                    } else if (isPlacedChar) {
+                                        fill = CHAR_PLACED_FILL;
+                                        stroke = CHAR_PLACED_STROKE;
+                                        strokeWidth = HIGHLIGHT_WIDTH;
+                                        cursor = 'grab';
+                                    } else if (isDragChar) {
+                                        fill = charDragState.isValid ? CHAR_DRAG_VALID_FILL : BOSS_DRAG_INVALID_FILL;
+                                        stroke = charDragState.isValid
+                                            ? CHAR_DRAG_VALID_STROKE
+                                            : BOSS_DRAG_INVALID_STROKE;
                                         strokeWidth = HIGHLIGHT_WIDTH;
                                     } else if (isHovered) {
                                         fill = 'rgba(255, 220, 0, 0.55)';
@@ -799,60 +1097,72 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
                                             stroke={stroke}
                                             strokeWidth={strokeWidth}
                                             style={{ cursor }}
-                                            onMouseEnter={() => !dragState && setHoveredKey(tileKey)}
+                                            onMouseEnter={() => !dragState && !charDragState && setHoveredKey(tileKey)}
                                             onMouseLeave={() => setHoveredKey(undefined)}
                                             onPointerDown={event => handlePointerDown(event, tile)}
-                                            onClick={() => !dragState && onHexClick?.(tile.logicalCol, tile.logicalRow)}
+                                            onClick={() =>
+                                                !dragState &&
+                                                !charDragState &&
+                                                onHexClick?.(tile.logicalCol, tile.logicalRow)
+                                            }
                                         />
                                     );
                                 })}
 
                                 {/* Boss image — placed position */}
                                 {bossImageName && placedImageLayout && (
-                                    <>
-                                        <defs>
-                                            <clipPath id="boss-placed-clip" clipPathUnits="userSpaceOnUse">
-                                                {placedImageLayout.clipPolygons.map((pts, index) => (
-                                                    <polygon key={index} points={pts} />
-                                                ))}
-                                            </clipPath>
-                                        </defs>
-                                        <image
-                                            href={getBossImageUrl(bossImageName)}
-                                            x={placedImageLayout.imgX}
-                                            y={placedImageLayout.imgY}
-                                            width={placedImageLayout.imgW}
-                                            height={placedImageLayout.imgH}
-                                            preserveAspectRatio="none"
-                                            clipPath="url(#boss-placed-clip)"
-                                            style={{ pointerEvents: 'none' }}
-                                        />
-                                    </>
+                                    <image
+                                        href={getBossImageUrl(bossImageName)}
+                                        x={placedImageLayout.imgX}
+                                        y={placedImageLayout.imgY}
+                                        width={placedImageLayout.imgW}
+                                        height={placedImageLayout.imgH}
+                                        preserveAspectRatio="none"
+                                        style={{ pointerEvents: 'none' }}
+                                    />
                                 )}
 
                                 {/* Boss image — drag preview (valid positions only) */}
                                 {bossImageName && dragImageLayout && (
-                                    <>
-                                        <defs>
-                                            <clipPath id="boss-drag-clip" clipPathUnits="userSpaceOnUse">
-                                                {dragImageLayout.clipPolygons.map((pts, index) => (
-                                                    <polygon key={index} points={pts} />
-                                                ))}
-                                            </clipPath>
-                                        </defs>
-                                        <image
-                                            href={getBossImageUrl(bossImageName)}
-                                            x={dragImageLayout.imgX}
-                                            y={dragImageLayout.imgY}
-                                            width={dragImageLayout.imgW}
-                                            height={dragImageLayout.imgH}
-                                            preserveAspectRatio="none"
-                                            clipPath="url(#boss-drag-clip)"
-                                            opacity={0.45}
-                                            style={{ pointerEvents: 'none' }}
-                                        />
-                                    </>
+                                    <image
+                                        href={getBossImageUrl(bossImageName)}
+                                        x={dragImageLayout.imgX}
+                                        y={dragImageLayout.imgY}
+                                        width={dragImageLayout.imgW}
+                                        height={dragImageLayout.imgH}
+                                        preserveAspectRatio="none"
+                                        opacity={0.45}
+                                        style={{ pointerEvents: 'none' }}
+                                    />
                                 )}
+
+                                {/* Character portraits */}
+                                {metrics &&
+                                    (placedCharacters ?? []).map(char => {
+                                        const isDragging = charDragState?.slotId === char.slotId;
+                                        const displayTile = isDragging ? charDragState!.candidateTile : char.tile;
+                                        const { x, y } = tileCenter(
+                                            metrics,
+                                            displayTile.vCol,
+                                            displayTile.vRow,
+                                            displayTile.elevation
+                                        );
+                                        const r = metrics.hexHeight * HEX_DRAW_SCALE * 0.42;
+                                        return (
+                                            <image
+                                                key={char.slotId}
+                                                href={getImageUrl(char.roundIcon)}
+                                                x={x - r}
+                                                y={y - r}
+                                                width={r * 2}
+                                                height={r * 2}
+                                                preserveAspectRatio="xMidYMid slice"
+                                                clipPath={`url(#char-portrait-clip-${char.slotId})`}
+                                                opacity={isDragging ? (charDragState!.isValid ? 0.6 : 0.25) : 1}
+                                                style={{ pointerEvents: 'none' }}
+                                            />
+                                        );
+                                    })}
                             </svg>
                         )}
                     </>
@@ -863,25 +1173,213 @@ function HexMapPreview({ mapId, bossSize, bossImageName, onHexClick, onBossPlace
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// CHARACTER SLOT CONTROLS
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface CharOptionItem {
+    value: string;
+    label: string;
+    imageUrl: string;
+}
+
+function CharacterSelect({
+    value,
+    options,
+    onChange,
+}: {
+    value: string;
+    options: CharOptionItem[];
+    onChange: (v: string) => void;
+}) {
+    const [isOpen, setIsOpen] = useState(false);
+    const selected = options.find(o => o.value === value);
+    return (
+        <div className="relative min-w-[150px] flex-1">
+            <button
+                type="button"
+                onClick={() => setIsOpen(p => !p)}
+                onBlur={() => setIsOpen(false)}
+                className="flex w-full cursor-pointer items-center gap-2 rounded-[4px] border border-[#2e3352] bg-[#0b0c10] py-[5px] pr-7 pl-2 font-[Nunito] text-[12px] text-[#d4d8e8] outline-none hover:border-[#c8a84b] focus:border-[#c8a84b]">
+                {selected && (
+                    <img
+                        src={selected.imageUrl}
+                        alt=""
+                        className="h-[20px] w-[20px] shrink-0 rounded-full object-cover"
+                    />
+                )}
+                <span className="truncate">{selected?.label ?? 'Select…'}</span>
+            </button>
+            <div className="pointer-events-none absolute top-1/2 right-2 -translate-y-1/2 text-[#5c6280]">
+                <svg width="10" height="6" viewBox="0 0 10 6" fill="currentColor">
+                    <path d="M0 0.5L5 5.5L10 0.5H0Z" />
+                </svg>
+            </div>
+            {isOpen && (
+                <div className="absolute top-full right-0 left-0 z-50 mt-1 max-h-[200px] overflow-y-auto rounded-[4px] border border-[#2e3352] bg-[#0d0f1a] shadow-xl">
+                    {options.map(o => (
+                        <div
+                            key={o.value}
+                            role="option"
+                            aria-selected={o.value === value}
+                            onMouseDown={event_ => event_.preventDefault()}
+                            onClick={() => {
+                                onChange(o.value);
+                                setIsOpen(false);
+                            }}
+                            className={`flex cursor-pointer items-center gap-2 px-2 py-[5px] text-[12px] hover:bg-[#1a1e30] ${
+                                o.value === value ? 'text-[#c8a84b]' : 'text-[#d4d8e8]'
+                            }`}>
+                            <img
+                                src={o.imageUrl}
+                                alt=""
+                                className="h-[18px] w-[18px] shrink-0 rounded-full object-cover"
+                            />
+                            <span>{o.label}</span>
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+function CompactSelect({
+    label,
+    value,
+    onChange,
+    options,
+}: {
+    label: string;
+    value: string;
+    onChange: (v: string) => void;
+    options: { value: string; label: string }[];
+}) {
+    return (
+        <div className="flex flex-col gap-[3px]">
+            <span className="font-[Rajdhani] text-[9px] font-semibold tracking-[0.1em] text-[#7a8099] uppercase">
+                {label}
+            </span>
+            <div className="relative">
+                <select
+                    value={value}
+                    onChange={event_ => onChange(event_.target.value)}
+                    className="cursor-pointer appearance-none rounded-[4px] border border-[#2e3352] bg-[#0b0c10] py-[5px] pr-6 pl-2 font-[Nunito] text-[12px] text-[#d4d8e8] outline-none hover:border-[#c8a84b] focus:border-[#c8a84b]">
+                    {options.map(o => (
+                        <option key={o.value} value={o.value}>
+                            {o.label}
+                        </option>
+                    ))}
+                </select>
+                <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 text-[#5c6280]">
+                    <svg width="8" height="5" viewBox="0 0 8 5" fill="currentColor">
+                        <path d="M0 0L4 5L8 0H0Z" />
+                    </svg>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const RaidHit = () => {
+    const { characters: unresolvedCharacters } = useContext(StoreContext);
     const [selectedBossId, setSelectedBossId] = useState<string>('');
     const [selectedPrimeId, setSelectedPrimeId] = useState<string>('');
     const [selectedMapId, setSelectedMapId] = useState<string>('');
     const [mapOptions, setMapOptions] = useState<string[]>(raidHitData.Maps);
 
-    const bossOptions = DUMMY_BOSSES.map(b => ({
+    const chars = useMemo(
+        () => CharactersService.resolveStoredCharacters(unresolvedCharacters),
+        [unresolvedCharacters]
+    );
+
+    const allowedChars = chars.filter(c => ALLOWED_CHARS.has(c.snowprintId));
+
+    // ── Character placement state ────────────────────────────────────────────
+    const [placedCharacters, setPlacedCharacters] = useState<PlacedCharacter[]>([]);
+    const [mapTiles, setMapTiles] = useState<HexTile[]>([]);
+    const [mapMetrics, setMapMetrics] = useState<HexMetrics>();
+    const nextSlotId = useRef(0);
+
+    // Clear character placements when the map changes
+    useEffect(() => {
+        setPlacedCharacters([]);
+        setMapTiles([]);
+        setMapMetrics(undefined);
+    }, [selectedMapId]);
+
+    const handleMapReady = useCallback((tiles: HexTile[], metrics: HexMetrics) => {
+        setMapTiles(tiles);
+        setMapMetrics(metrics);
+    }, []);
+
+    const handleCharacterMoved = useCallback((slotId: number, tile: HexTile) => {
+        setPlacedCharacters(previous => previous.map(c => (c.slotId === slotId ? { ...c, tile } : c)));
+    }, []);
+
+    const handleAddChar = () => {
+        if (!mapMetrics || mapTiles.length === 0 || placedCharacters.length >= 5) return;
+        const usedIds = new Set(placedCharacters.map(c => c.charId));
+        const available = allowedChars.filter(c => !usedIds.has(c.snowprintId));
+        if (available.length === 0) return;
+        const char = available[0];
+        const excludeKeys = new Set(placedCharacters.map(c => `${c.tile.vCol},${c.tile.vRow}`));
+        const tile = findSwTile(mapTiles, mapMetrics, excludeKeys);
+        if (!tile) return;
+        setPlacedCharacters(previous => [
+            ...previous,
+            {
+                slotId: nextSlotId.current++,
+                charId: char.snowprintId,
+                roundIcon: char.roundIcon,
+                tile,
+                rank: char.rank,
+                rarity: char.rarity,
+                stars: char.stars,
+                activeAbilityLevel: char.activeAbilityLevel,
+                passiveAbilityLevel: char.passiveAbilityLevel,
+            },
+        ]);
+    };
+
+    const handleCharChange = (slotId: number, newCharId: string) => {
+        const char = allowedChars.find(c => c.snowprintId === newCharId);
+        if (!char) return;
+        setPlacedCharacters(previous =>
+            previous.map(c =>
+                c.slotId === slotId
+                    ? {
+                          ...c,
+                          charId: char.snowprintId,
+                          roundIcon: char.roundIcon,
+                          rank: char.rank,
+                          rarity: char.rarity,
+                          stars: char.stars,
+                          activeAbilityLevel: char.activeAbilityLevel,
+                          passiveAbilityLevel: char.passiveAbilityLevel,
+                      }
+                    : c
+            )
+        );
+    };
+
+    const handleSlotUpdate = (slotId: number, updates: Partial<PlacedCharacter>) => {
+        setPlacedCharacters(previous => previous.map(c => (c.slotId === slotId ? { ...c, ...updates } : c)));
+    };
+
+    const bossOptions = BOSS_INFO.map(b => ({
         value: b.id,
         label: b.name,
-        sub: b.faction,
+        imageUrl: getBossImageUrl(b.image_name),
     }));
 
     const primeOptions = useMemo(() => {
         const pool = selectedBossId ? DUMMY_PRIMES.filter(p => p.bossId === selectedBossId) : DUMMY_PRIMES;
 
-        const bossEntry = selectedBossId ? DUMMY_BOSSES.find(b => b.id === selectedBossId) : undefined;
+        const bossEntry = selectedBossId ? BOSS_INFO.find(b => b.id === selectedBossId) : undefined;
 
         return [
             // The boss itself as a selectable "prime"
@@ -896,7 +1394,7 @@ export const RaidHit = () => {
         setSelectedPrimeId('');
         setMapOptions(
             raidHitData.Maps.filter(mapId => {
-                const boss = DUMMY_BOSSES.find(b => b.id === id);
+                const boss = BOSS_INFO.find(b => b.id === id);
                 return boss ? mapId.startsWith(boss.map_prefix) : true;
             })
         );
@@ -941,12 +1439,114 @@ export const RaidHit = () => {
                 />
             </div>
 
+            {/* ── Characters ─────────────────────────────────────────────── */}
+            <div className="relative mt-2 flex flex-col gap-3 rounded-[6px] border border-[#1f2232] bg-[#13151e] px-[22px] py-5">
+                <div className="pointer-events-none absolute inset-0 rounded-[6px] bg-gradient-to-br from-[rgba(80,255,100,0.03)] to-transparent" />
+                <div className="flex items-center justify-between">
+                    <span className="font-[Rajdhani] text-[10px] font-semibold tracking-[0.18em] text-[#c8a84b] uppercase">
+                        Characters ({placedCharacters.length}/5)
+                    </span>
+                    <button
+                        type="button"
+                        onClick={handleAddChar}
+                        disabled={placedCharacters.length >= 5 || !mapMetrics}
+                        className="flex items-center gap-1 rounded-[4px] border border-[#2e3352] bg-[#0b0c10] px-3 py-[5px] text-[12px] text-[#d4d8e8] transition-colors hover:border-[#c8a84b] hover:text-[#c8a84b] disabled:pointer-events-none disabled:opacity-30">
+                        + Add
+                    </button>
+                </div>
+                {placedCharacters.length === 0 && (
+                    <p className="text-[12px] text-[#5c6280]">
+                        {mapMetrics ? 'Add characters to place them on the map.' : 'Select a map first.'}
+                    </p>
+                )}
+                {placedCharacters.map(slot => {
+                    const usedIds = new Set(placedCharacters.filter(c => c.slotId !== slot.slotId).map(c => c.charId));
+                    const charOptions = allowedChars
+                        .filter(c => !usedIds.has(c.snowprintId))
+                        .map(c => ({ value: c.snowprintId, label: c.name, imageUrl: getImageUrl(c.roundIcon) }));
+                    return (
+                        <div
+                            key={slot.slotId}
+                            className="flex flex-wrap items-center gap-3 rounded-[4px] border border-[#1a1e30] bg-[#0d0f1a] px-3 py-2">
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    setPlacedCharacters(previous => previous.filter(c => c.slotId !== slot.slotId))
+                                }
+                                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-[#3a2020] bg-[#1a0f0f] text-[11px] text-[#cc5555] hover:border-[#cc5555]">
+                                ×
+                            </button>
+                            <CharacterSelect
+                                value={slot.charId}
+                                options={charOptions}
+                                onChange={newId => handleCharChange(slot.slotId, newId)}
+                            />
+                            <CompactSelect
+                                label="Rank"
+                                value={String(slot.rank)}
+                                onChange={v => handleSlotUpdate(slot.slotId, { rank: Number(v) as Rank })}
+                                options={RANK_OPTIONS}
+                            />
+                            <CompactSelect
+                                label="Rarity"
+                                value={String(slot.rarity)}
+                                onChange={v => handleSlotUpdate(slot.slotId, { rarity: Number(v) as Rarity })}
+                                options={RARITY_OPTIONS}
+                            />
+                            <CompactSelect
+                                label="Stars"
+                                value={String(slot.stars)}
+                                onChange={v => handleSlotUpdate(slot.slotId, { stars: Number(v) as RarityStars })}
+                                options={STARS_OPTIONS}
+                            />
+                            <div className="flex flex-col gap-[3px]">
+                                <span className="font-[Rajdhani] text-[9px] font-semibold tracking-[0.1em] text-[#7a8099] uppercase">
+                                    Active
+                                </span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={65}
+                                    value={slot.activeAbilityLevel}
+                                    onChange={event_ =>
+                                        handleSlotUpdate(slot.slotId, {
+                                            activeAbilityLevel: Math.min(65, Math.max(1, Number(event_.target.value))),
+                                        })
+                                    }
+                                    className="w-[52px] rounded-[4px] border border-[#2e3352] bg-[#0b0c10] px-2 py-[5px] text-center text-[12px] text-[#d4d8e8] outline-none focus:border-[#c8a84b]"
+                                />
+                            </div>
+                            <div className="flex flex-col gap-[3px]">
+                                <span className="font-[Rajdhani] text-[9px] font-semibold tracking-[0.1em] text-[#7a8099] uppercase">
+                                    Passive
+                                </span>
+                                <input
+                                    type="number"
+                                    min={1}
+                                    max={65}
+                                    value={slot.passiveAbilityLevel}
+                                    onChange={event_ =>
+                                        handleSlotUpdate(slot.slotId, {
+                                            passiveAbilityLevel: Math.min(65, Math.max(1, Number(event_.target.value))),
+                                        })
+                                    }
+                                    className="w-[52px] rounded-[4px] border border-[#2e3352] bg-[#0b0c10] px-2 py-[5px] text-center text-[12px] text-[#d4d8e8] outline-none focus:border-[#c8a84b]"
+                                />
+                            </div>
+                        </div>
+                    );
+                })}
+            </div>
+
             <div className="my-6 h-px bg-gradient-to-r from-transparent via-[#2e3352] to-transparent" />
             {selectedMapId ? (
                 <HexMapPreview
                     mapId={selectedMapId}
-                    bossSize={DUMMY_BOSSES.find(b => b.id === selectedBossId)?.tiles ?? 7}
-                    bossImageName={DUMMY_BOSSES.find(b => b.id === selectedBossId)?.image_name}
+                    bossSize={BOSS_INFO.find(b => b.id === selectedBossId)?.tiles ?? 7}
+                    bossImageName={BOSS_INFO.find(b => b.id === selectedBossId)?.image_name}
+                    placedCharacters={placedCharacters}
+                    onCharacterMoved={handleCharacterMoved}
+                    onMapReady={handleMapReady}
                 />
             ) : (
                 <div className="flex min-h-[340px] flex-col items-center justify-center gap-4 rounded-[6px] border border-dashed border-[#2e3352] text-[#5c6280]">

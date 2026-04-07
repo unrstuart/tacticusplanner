@@ -1,0 +1,59 @@
+{
+    "abilities": [
+        {
+            "id": "TalonsOfTheEmperor",
+            "charId": "custoAtlacoya",
+            "type": "active",
+            "effects": [
+                {
+                    "id": "part1",
+                    "target": "self",
+                    "effect": {
+                        "type": "ChangeDamage",
+                        "attackType": "NonNormal",
+                        "duration": "NextAttack",
+                        "damageAddition": {
+                            "type": "lookup",
+                            "var": "abilityId",
+                            "subVar": "extraDmg",
+                            "multiplierCondition": {
+                                "type": "lookup",
+                                "var": "global:activeAbilitiesUsedThisBattle"
+                            }
+                        }
+                    }
+                },
+                {
+                    "id": "part2",
+                    "target": "self",
+                    "effect": {
+                        "type": "ChangePierce",
+                        "fixedPierce": 1.0,
+                        "condition": {
+                            "type": "TargetHasTrait",
+                            "trait": "Psyker"
+                        }
+                    }
+                },
+                {
+                    "id": "part3",
+                    "target": "enemyUnitId",
+                    "effect": {
+                        "type": "MeleeAttack",
+                        "attackType": "NonNormal",
+                        "target": "enemyUnitId",
+                        "pierce": 0.4,
+                        "hits": 1,
+                        "damage": {
+                            "condition": {
+                                "min": { "type": "lookup", "var": "abilityId", "subVar": "minDmg" },
+                                "max": { "type": "lookup", "var": "abilityId", "subVar": "maxDmg" }
+                            }
+                        }
+                    }
+                }
+            ]
+        }
+    ],
+    "traits": [{}]
+}
