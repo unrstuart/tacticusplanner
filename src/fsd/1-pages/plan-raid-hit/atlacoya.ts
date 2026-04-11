@@ -117,6 +117,7 @@ function respondToEvent(state: IBattleState, self: IUnitId): IRaidEvent | undefi
         const targetIsPsyker = BattleHelper.hasTrait(state, event.targets[0], 'Psyker');
         return {
             type: 'attack',
+            abilityId: ACTIVE_ABILITY_ID,
             attack: {
                 attackerId: self,
                 defenderId: event.targets[0],
@@ -135,6 +136,7 @@ function respondToEvent(state: IBattleState, self: IUnitId): IRaidEvent | undefi
                         buffs: [],
                         modifiers: [],
                         blocks: [],
+                        blockBuffs: [],
                     } as IHit,
                 ],
             } as IAttack,

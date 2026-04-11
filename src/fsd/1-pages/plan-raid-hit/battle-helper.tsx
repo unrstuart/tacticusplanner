@@ -12,9 +12,32 @@ import {
     IPierceBuff,
     IRaidEvent,
     IUnitId,
+    IBlockBuff,
 } from './models';
 
 export class BattleHelper {
+    public static getRandomInt(state: IBattleState, minInclusive: number, maxExclusive: number): number {
+        return Math.floor(Math.random() * (maxExclusive - minInclusive)) + minInclusive;
+    }
+
+    public static varAsBoolean(value: IRaidVariableValue): boolean | undefined {
+        if (typeof value === 'boolean') return value;
+        return undefined;
+    }
+
+    public static varAsNumber(value: IRaidVariableValue): number | undefined {
+        if (typeof value === 'number') return value;
+        return undefined;
+    }
+
+    public static getAdjacentUnits(state: IBattleState, unitId: IUnitId): IUnitId[] {
+        return [];
+    }
+
+    public static getUnitsWithinHexRange(state: IBattleState, unitId: IUnitId, range: number): IUnitId[] {
+        return [];
+    }
+
     public static hasTrait(state: IBattleState, unitId: IUnitId, trait: string): boolean {
         return false;
     }
@@ -114,6 +137,11 @@ export class BattleHelper {
     public static addBuff(buff: IBuff, hit: IHit): void {
         const existing = hit.buffs.find(m => m.id === buff.id);
         if (existing === undefined) hit.buffs.push(buff);
+    }
+
+    public static addBlockBuff(buff: IBlockBuff, hit: IHit): void {
+        const existing = hit.blockBuffs.find(m => m.id === buff.id);
+        if (existing === undefined) hit.blockBuffs.push(buff);
     }
 
     public static addPierceBuff(buff: IPierceBuff, hit: IHit): void {

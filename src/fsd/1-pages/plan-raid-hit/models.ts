@@ -14,6 +14,13 @@ export interface IBlock {
     damage: number;
 }
 
+/* Describes a block buff that is an increase in block chance and or block damage. */
+export interface IBlockBuff {
+    id: string;
+    chance: number;
+    damage: number;
+}
+
 /** Describes a flat damage buff or debuff in terms of an id and an amount. */
 export interface IBuff {
     id: string;
@@ -54,6 +61,7 @@ export interface IHit {
     buffs: IBuff[];
     modifiers: IModifier[];
     blocks: IBlock[];
+    blockBuffs: IBlockBuff[];
 }
 
 export interface IAttack {
@@ -155,6 +163,11 @@ export interface IAttack {
  * The framework will handle all purely trait-related modifications. For example, things like Parry,
  * Terrifying, Blessings of Khorne, etc.
  *
+ * TURN START/END
+ * Turns starting and ending have a trigger and finish. If your character has an active ability that
+ * lasts until the start of their next turn, you should take care to clear the ability at the
+ * trigger, not at the perform. The perform is for things like Kharn's passive, where he moves and
+ * attacks.
  */
 
 export type NonTriggerNonFinishEventType =
@@ -186,6 +199,8 @@ export interface IEventTriggerMove {
     type: 'trigger';
     triggerType: 'move';
     unitId: IUnitId;
+    /** The tile the unit is moving from. We need this for some buffers (like Trajann). */
+    origin: { x: number; y: number };
     /** The tile the unit is moving to. Overwatch responders use this to check range. */
     destination: { x: number; y: number };
 }
@@ -202,18 +217,20 @@ export interface IEventTriggerPassive {
     type: 'trigger';
     triggerType: 'passive';
     unitId: IUnitId;
+    targets: IUnitId[];
+    abilityId: string;
 }
 
 export interface IEventTriggerStartOfTurn {
     type: 'trigger';
     triggerType: 'startOfTurn';
-    unitId: IUnitId;
+    teamId: string;
 }
 
 export interface IEventTriggerEndOfTurn {
     type: 'trigger';
     triggerType: 'endOfTurn';
-    unitId: IUnitId;
+    teamId: string;
 }
 
 export type IEventTrigger =
@@ -258,18 +275,20 @@ export interface IEventFinishPassive {
     type: 'finish';
     finishType: 'passive';
     unitId: IUnitId;
+    targets: IUnitId[];
+    abilityId: string;
 }
 
 export interface IEventFinishStartOfTurn {
     type: 'finish';
     finishType: 'startOfTurn';
-    unitId: IUnitId;
+    teamId: string;
 }
 
 export interface IEventFinishEndOfTurn {
     type: 'finish';
     finishType: 'endOfTurn';
-    unitId: IUnitId;
+    teamId: string;
 }
 
 export type IEventFinish =
@@ -288,6 +307,7 @@ export interface IEventError {
 export interface IEventAttack {
     type: 'attack';
     attack: IAttack;
+    abilityId?: string; // Present if this attack is from an ability, absent if it's a normal attack.
 }
 
 export interface IEventMove {
@@ -297,10 +317,12 @@ export interface IEventMove {
 
 export interface IEventStartOfTurn {
     type: 'startOfTurn';
+    teamId: string;
 }
 
 export interface IEventEndOfTurn {
     type: 'endOfTurn';
+    teamId: string;
 }
 
 export interface IEventActiveAbility {
@@ -313,6 +335,8 @@ export interface IEventActiveAbility {
 export interface IEventPassiveAbility {
     type: 'passive';
     unitId: IUnitId;
+    targets: IUnitId[];
+    abilityId: string;
 }
 
 export type IRaidEvent =
