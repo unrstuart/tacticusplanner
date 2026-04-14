@@ -261,6 +261,13 @@ export default defineConfig([
                 },
             ],
         },
+    },{
+        // 1. Target the specific generated file
+        files: ['node_modules/eslint-plugin-unicorn/index.js'],
+        rules: {
+            'unicorn/prevent-abbreviations': 'off',
+            'unicorn/switch-case-braces': 'off',
+        },
     },
     eslintPluginPrettierRecommended,
 ]);

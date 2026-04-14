@@ -1,3 +1,5 @@
+import { Rank, Rarity, RarityStars } from '@/fsd/5-shared/model';
+
 export interface IUnitId {
     id: string;
     teamId: string;
@@ -6,6 +8,20 @@ export interface IUnitId {
      * of a unit.
      */
     uuid: string;
+}
+
+/** The details of a unit used to determine things like stats, crit chance, ability levels, etc. */
+export interface IUnitDetails {
+    rank: Rank;
+    rarity: Rarity;
+    stars: RarityStars;
+    activeLevel: number;
+    passiveLevel: number;
+    equipment: string[];
+    equipmentLevel: number[];
+    // Health (top, bottom), dmg (top, bottom), armor (top, bottom), in that order. See
+    // datamined_units.json for more details.
+    appliedUpgrades: boolean[];
 }
 
 /** Describes a block in terms of chance [0,1] and damage [0, inf]. */
@@ -366,54 +382,6 @@ export interface IRaidConfigurableVariableDescriptor {
     targets: IRaidVariableTargets;
 }
 
-export interface IBattleState {
-    /**
-     * The units on the board, keyed by snowprint ID. There could be multiple units with the same
-     * snowprint ID, e.g. both sides running the same unit, or multiple friendly skittles.
-     */
-    units: Record<string, IUnitId[]>;
-
-    /** The IDs of the team, set by the framework. */
-    teams: string[];
-
-    /** The same as `units` above, but keyed by UUID instead of snowprint ID. */
-    unitsByUuid: Record<string, IUnitId>;
-
-    /**
-     * Unit locations on the board. Keyed by *uuid*, *not* snowprint ID. Use BattleHelper to
-     * determine distance between two points, don't try to compute it yourself.
-     */
-    locations: Record<string, { x: number; y: number }>;
-
-    /**
-     * A list of all events that have both performed and finished. This is only populated when no
-     * unit responds to a *finish* event.
-     */
-    finishedEventChains: IRaidEvent[];
-
-    /**
-     * A list of all events currently happening, i.e. some sequence events of starting from one
-     * particular event, and not all events have finished yet. This may include finished events,
-     * for example multiple attacks of an active-ability chain.
-     */
-    currentEventChain: IRaidEvent[];
-
-    /**
-     * All global variables that have a value in the current sim. See global_vars.ts for a list of
-     * all of the variables known to the framework. You can only set a variable if you register it
-     * in global_vars.ts.
-     */
-    globalVariables: Record<string, IRaidVariableValue>;
-
-    /**
-     * Character-specific variables, keyed by character uuid, then by variable name. You can set
-     * any variable you want here, but it's recommended to prefix the variable name with the
-     * character name to avoid conflicts. This is primarily for effects like High Marshall
-     * Helbrecht's active, that takes effect and then lingers until the end of the next round.
-     */
-    characterVariables: Record<string, Record<string, IRaidVariableValue>>;
-}
-
 export type ActiveTargetType =
     | 'AdjacentEnemy'
     | 'EnemyInRangeTwo'
@@ -450,4 +418,93 @@ export interface IRaidCharacter {
 export interface IRaidCharacterInstance extends IRaidCharacter {
     uuid: string;
     teamId: string;
+}
+
+export interface IDataminedAbility {
+    id: string;
+    attackRangeType?: 'melee' | 'ranged';
+    variables: Record<string, number[]>;
+    constants: Record<string, string>;
+    variablesAffectedByRarityBonus: string[];
+}
+
+export interface IProfileMeleeAttack {
+    hitCount: number;
+    pierce: string;
+}
+
+export interface IProfileRangedAttack {
+    hitCount: number;
+    pierce: string;
+    range: number;
+}
+
+export interface IUnitStats {
+    damage: number;
+    armor: number;
+    health: number;
+    initialProgressionIndex: number;
+}
+
+export interface IDataminedUnit {
+    id: string;
+    name: string;
+    movement: number;
+    activeAbilityId: string;
+    passiveAbilityIds: string;
+    traits: string[];
+    itemSlots: string[];
+    statIncreases: number[][];
+    relicSlot: number;
+    meleeAttack: IProfileMeleeAttack;
+    rangedAttack?: IProfileRangedAttack;
+    initialStats: IUnitStats;
+}
+
+export interface IBattleState {
+    /**  The units on the board, keyed by UUID. */
+    units: Record<string, IUnitId>;
+
+    /** The units on the board, with their ranks, rarities, ability levels, and equipment. Keyed by uuid. */
+    unitDetails: Record<string, IUnitDetails>;
+
+    /** The IDs of the team, set by the framework. */
+    teams: string[];
+
+    /** The same as `units` above, but keyed by UUID instead of snowprint ID. */
+    unitsByUuid: Record<string, IUnitId>;
+
+    /**
+     * Unit locations on the board. Keyed by *uuid*, *not* snowprint ID. Use BattleHelper to
+     * determine distance between two points, don't try to compute it yourself.
+     */
+    locations: Record<string, { vCol: number; vRow: number }>;
+
+    /**
+     * A list of all events that have both performed and finished. This is only populated when no
+     * unit responds to a *finish* event.
+     */
+    finishedEventChains: IRaidEvent[];
+
+    /**
+     * A list of all events currently happening, i.e. some sequence events of starting from one
+     * particular event, and not all events have finished yet. This may include finished events,
+     * for example multiple attacks of an active-ability chain.
+     */
+    currentEventChain: IRaidEvent[];
+
+    /**
+     * All global variables that have a value in the current sim. See global_vars.ts for a list of
+     * all of the variables known to the framework. You can only set a variable if you register it
+     * in global_vars.ts.
+     */
+    globalVariables: Record<string, IRaidVariableValue>;
+
+    /**
+     * Character-specific variables, keyed by character uuid, then by variable name. You can set
+     * any variable you want here, but it's recommended to prefix the variable name with the
+     * character name to avoid conflicts. This is primarily for effects like High Marshall
+     * Helbrecht's active, that takes effect and then lingers until the end of the next round.
+     */
+    characterVariables: Record<string, Record<string, IRaidVariableValue>>;
 }

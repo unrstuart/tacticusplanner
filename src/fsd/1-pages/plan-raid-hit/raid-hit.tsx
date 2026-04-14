@@ -5,11 +5,13 @@ import { StoreContext } from '@/reducers/store.provider';
 import { getImageUrl } from '@/shared-logic/functions';
 
 import { FactionId, Rank, Rarity, RarityStars, rankToString } from '@/fsd/5-shared/model';
+import { RankIcon, RarityIcon, StarsIcon } from '@/fsd/5-shared/ui/icons';
 
-import { CharactersService } from '@/fsd/4-entities/character';
+import { CharactersService, ICharacter2 } from '@/fsd/4-entities/character';
 
 import raidHitData from '@/fsd/1-pages/plan-raid-hit/data/raid-hit.json';
 
+import { BattleHelper } from './battle-helper';
 import {
     classify,
     ConfigVisualJson,
@@ -27,12 +29,8 @@ import {
     SPAWN_STROKE,
     tileCenter,
 } from './hex-map-core';
-
-// TODOs
-// Import character stats
-// Use equipment
-// Define abilities
-// Simulate hits
+import { IBattleState, IUnitId } from './models';
+import { REGISTERED_UNITS } from './registered-units';
 
 interface Boss {
     id: string;
@@ -48,20 +46,7 @@ interface Prime {
     bossId: string;
 }
 
-const ALLOWED_CHARS = new Set<string>([
-    'custoBladeChampion',
-    'custoTrajann',
-    'worldKharn',
-    'custoAtlacoya',
-    'custoVexilusPraetor',
-    'templHelbrecht',
-    'votanUthar',
-    'bloodDante',
-    'spaceBlackmane',
-    'admecDominus',
-    'orksWarboss',
-    'emperExultant',
-]);
+const ALLOWED_CHARS = new Set<string>(REGISTERED_UNITS.map(unit => unit.id));
 
 const BOSS_INFO: Boss[] = [
     {
@@ -507,6 +492,7 @@ interface PlacedCharacter {
     stars: RarityStars;
     activeAbilityLevel: number;
     passiveAbilityLevel: number;
+    unitId: IUnitId;
 }
 
 interface CharDragState {
@@ -542,7 +528,7 @@ const RANK_OPTIONS = [
     Rank.Diamond3,
     Rank.Adamantine1,
     Rank.Adamantine2,
-    Rank.Adamantine3,
+    // Rank.Adamantine3,
 ].map(r => ({ value: String(r), label: rankToString(r) }));
 
 const RARITY_OPTIONS = [
@@ -1243,38 +1229,139 @@ function CharacterSelect({
     );
 }
 
-function CompactSelect({
-    label,
-    value,
-    onChange,
-    options,
-}: {
-    label: string;
-    value: string;
-    onChange: (v: string) => void;
-    options: { value: string; label: string }[];
-}) {
+function StarsCompactSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const selected = STARS_OPTIONS.find(o => o.value === value);
     return (
         <div className="flex flex-col gap-[3px]">
             <span className="font-[Rajdhani] text-[9px] font-semibold tracking-[0.1em] text-[#7a8099] uppercase">
-                {label}
+                Stars
             </span>
             <div className="relative">
-                <select
-                    value={value}
-                    onChange={event_ => onChange(event_.target.value)}
-                    className="cursor-pointer appearance-none rounded-[4px] border border-[#2e3352] bg-[#0b0c10] py-[5px] pr-6 pl-2 font-[Nunito] text-[12px] text-[#d4d8e8] outline-none hover:border-[#c8a84b] focus:border-[#c8a84b]">
-                    {options.map(o => (
-                        <option key={o.value} value={o.value}>
-                            {o.label}
-                        </option>
-                    ))}
-                </select>
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(p => !p)}
+                    onBlur={() => setIsOpen(false)}
+                    className="flex cursor-pointer items-center gap-1 rounded-[4px] border border-[#2e3352] bg-[#0b0c10] py-[5px] pr-6 pl-2 outline-none hover:border-[#c8a84b] focus:border-[#c8a84b]">
+                    {selected && <StarsIcon stars={Number(selected.value) as RarityStars} />}
+                </button>
                 <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 text-[#5c6280]">
                     <svg width="8" height="5" viewBox="0 0 8 5" fill="currentColor">
                         <path d="M0 0L4 5L8 0H0Z" />
                     </svg>
                 </div>
+                {isOpen && (
+                    <div className="absolute top-full left-0 z-50 mt-1 max-h-[200px] overflow-y-auto rounded-[4px] border border-[#2e3352] bg-[#0d0f1a] shadow-xl">
+                        {STARS_OPTIONS.map(o => (
+                            <div
+                                key={o.value}
+                                role="option"
+                                aria-selected={o.value === value}
+                                onMouseDown={event_ => event_.preventDefault()}
+                                onClick={() => {
+                                    onChange(o.value);
+                                    setIsOpen(false);
+                                }}
+                                className={`flex cursor-pointer items-center gap-2 px-2 py-[5px] hover:bg-[#1a1e30] ${
+                                    o.value === value ? 'text-[#c8a84b]' : 'text-[#d4d8e8]'
+                                }`}>
+                                <StarsIcon stars={Number(o.value) as RarityStars} />
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function RankCompactSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const selected = RANK_OPTIONS.find(o => o.value === value);
+    return (
+        <div className="flex flex-col gap-[3px]">
+            <span className="font-[Rajdhani] text-[9px] font-semibold tracking-[0.1em] text-[#7a8099] uppercase">
+                Rank
+            </span>
+            <div className="relative">
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(p => !p)}
+                    onBlur={() => setIsOpen(false)}
+                    className="flex cursor-pointer items-center gap-1 rounded-[4px] border border-[#2e3352] bg-[#0b0c10] py-[5px] pr-6 pl-2 outline-none hover:border-[#c8a84b] focus:border-[#c8a84b]">
+                    {selected && <RankIcon rank={Number(selected.value) as Rank} size={18} />}
+                </button>
+                <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 text-[#5c6280]">
+                    <svg width="8" height="5" viewBox="0 0 8 5" fill="currentColor">
+                        <path d="M0 0L4 5L8 0H0Z" />
+                    </svg>
+                </div>
+                {isOpen && (
+                    <div className="absolute top-full left-0 z-50 mt-1 max-h-[200px] overflow-y-auto rounded-[4px] border border-[#2e3352] bg-[#0d0f1a] shadow-xl">
+                        {RANK_OPTIONS.map(o => (
+                            <div
+                                key={o.value}
+                                role="option"
+                                aria-selected={o.value === value}
+                                onMouseDown={event_ => event_.preventDefault()}
+                                onClick={() => {
+                                    onChange(o.value);
+                                    setIsOpen(false);
+                                }}
+                                className={`flex cursor-pointer items-center gap-2 px-2 py-[5px] hover:bg-[#1a1e30] ${
+                                    o.value === value ? 'text-[#c8a84b]' : 'text-[#d4d8e8]'
+                                }`}>
+                                <RankIcon rank={Number(o.value) as Rank} size={18} />
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+function RarityCompactSelect({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const selected = RARITY_OPTIONS.find(o => o.value === value);
+    return (
+        <div className="flex flex-col gap-[3px]">
+            <span className="font-[Rajdhani] text-[9px] font-semibold tracking-[0.1em] text-[#7a8099] uppercase">
+                Rarity
+            </span>
+            <div className="relative">
+                <button
+                    type="button"
+                    onClick={() => setIsOpen(p => !p)}
+                    onBlur={() => setIsOpen(false)}
+                    className="flex cursor-pointer items-center gap-1 rounded-[4px] border border-[#2e3352] bg-[#0b0c10] py-[5px] pr-6 pl-2 outline-none hover:border-[#c8a84b] focus:border-[#c8a84b]">
+                    {selected && <RarityIcon rarity={Number(selected.value) as Rarity} />}
+                </button>
+                <div className="pointer-events-none absolute top-1/2 right-1 -translate-y-1/2 text-[#5c6280]">
+                    <svg width="8" height="5" viewBox="0 0 8 5" fill="currentColor">
+                        <path d="M0 0L4 5L8 0H0Z" />
+                    </svg>
+                </div>
+                {isOpen && (
+                    <div className="absolute top-full left-0 z-50 mt-1 rounded-[4px] border border-[#2e3352] bg-[#0d0f1a] shadow-xl">
+                        {RARITY_OPTIONS.map(o => (
+                            <div
+                                key={o.value}
+                                role="option"
+                                aria-selected={o.value === value}
+                                onMouseDown={event_ => event_.preventDefault()}
+                                onClick={() => {
+                                    onChange(o.value);
+                                    setIsOpen(false);
+                                }}
+                                className={`flex cursor-pointer items-center gap-2 px-2 py-[5px] hover:bg-[#1a1e30] ${
+                                    o.value === value ? 'text-[#c8a84b]' : 'text-[#d4d8e8]'
+                                }`}>
+                                <RarityIcon rarity={Number(o.value) as Rarity} />
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -1290,6 +1377,17 @@ export const RaidHit = () => {
     const [selectedPrimeId, setSelectedPrimeId] = useState<string>('');
     const [selectedMapId, setSelectedMapId] = useState<string>('');
     const [mapOptions, setMapOptions] = useState<string[]>(raidHitData.Maps);
+    const [battleState, setBattleState] = useState<IBattleState>({
+        units: {},
+        unitDetails: {},
+        teams: ['player', 'boss'],
+        unitsByUuid: {},
+        locations: {},
+        finishedEventChains: [],
+        currentEventChain: [],
+        globalVariables: {},
+        characterVariables: {},
+    });
 
     const chars = useMemo(
         () => CharactersService.resolveStoredCharacters(unresolvedCharacters),
@@ -1320,6 +1418,27 @@ export const RaidHit = () => {
         setPlacedCharacters(previous => previous.map(c => (c.slotId === slotId ? { ...c, tile } : c)));
     }, []);
 
+    const updateState = (char: ICharacter2, tile: HexTile) => {
+        const uuid = BattleHelper.getUuid(char.snowprintId, 'player', 0);
+        const unitId = { id: char.snowprintId, teamId: 'player', uuid };
+        const loc = { vCol: tile.vCol, vRow: tile.vRow };
+        const newState = { ...battleState };
+        newState.units[unitId.uuid] = unitId;
+        newState.unitDetails[unitId.uuid] = {
+            rank: char.rank,
+            rarity: char.rarity,
+            stars: char.stars,
+            activeLevel: char.activeAbilityLevel,
+            passiveLevel: char.passiveAbilityLevel,
+            equipment: [char.equipment[0].id, char.equipment[1].id, char.equipment[2].id],
+            equipmentLevel: [char.equipment[0].level, char.equipment[1].level, char.equipment[2].level],
+            appliedUpgrades: [false, false, false, false, false, false],
+        };
+        newState.locations[unitId.uuid] = loc;
+        setBattleState(newState);
+        return { unitId, newState };
+    };
+
     const handleAddChar = () => {
         if (!mapMetrics || mapTiles.length === 0 || placedCharacters.length >= 5) return;
         const usedIds = new Set(placedCharacters.map(c => c.charId));
@@ -1329,6 +1448,8 @@ export const RaidHit = () => {
         const excludeKeys = new Set(placedCharacters.map(c => `${c.tile.vCol},${c.tile.vRow}`));
         const tile = findSwTile(mapTiles, mapMetrics, excludeKeys);
         if (!tile) return;
+        const { unitId, newState } = updateState(char, tile);
+        console.log('newState', newState);
         setPlacedCharacters(previous => [
             ...previous,
             {
@@ -1341,13 +1462,44 @@ export const RaidHit = () => {
                 stars: char.stars,
                 activeAbilityLevel: char.activeAbilityLevel,
                 passiveAbilityLevel: char.passiveAbilityLevel,
+                unitId,
             },
         ]);
     };
 
-    const handleCharChange = (slotId: number, newCharId: string) => {
+    const handleCharChange = (slotId: number, oldCharId: string, newCharId: string) => {
+        const oldChar = allowedChars.find(c => c.snowprintId === oldCharId);
+        const newChar = allowedChars.find(c => c.snowprintId === newCharId);
+        if (!oldChar || !newChar) return;
         const char = allowedChars.find(c => c.snowprintId === newCharId);
         if (!char) return;
+        const oldUnitId = {
+            id: oldChar.snowprintId,
+            teamId: 'player',
+            uuid: BattleHelper.getUuid(oldChar.snowprintId, 'player', 0),
+        };
+        const newUnitId = {
+            id: newChar.snowprintId,
+            teamId: 'player',
+            uuid: BattleHelper.getUuid(newChar.snowprintId, 'player', 0),
+        };
+        const newState = { ...battleState };
+        delete newState.units[oldUnitId.uuid];
+        delete newState.unitDetails[oldUnitId.uuid];
+        delete newState.locations[oldUnitId.uuid];
+        newState.units[newUnitId.uuid] = newUnitId;
+        newState.unitDetails[newUnitId.uuid] = {
+            rank: newChar.rank,
+            rarity: newChar.rarity,
+            stars: newChar.stars,
+            activeLevel: newChar.activeAbilityLevel,
+            passiveLevel: newChar.passiveAbilityLevel,
+            equipment: ['', '', ''],
+            equipmentLevel: [-1, -1, -1],
+            appliedUpgrades: [false, false, false, false, false, false],
+        };
+        newState.locations[newUnitId.uuid] = newState.locations[oldUnitId.uuid];
+        setBattleState(newState);
         setPlacedCharacters(previous =>
             previous.map(c =>
                 c.slotId === slotId
@@ -1360,6 +1512,7 @@ export const RaidHit = () => {
                           stars: char.stars,
                           activeAbilityLevel: char.activeAbilityLevel,
                           passiveAbilityLevel: char.passiveAbilityLevel,
+                          unitId: newUnitId,
                       }
                     : c
             )
@@ -1367,6 +1520,24 @@ export const RaidHit = () => {
     };
 
     const handleSlotUpdate = (slotId: number, updates: Partial<PlacedCharacter>) => {
+        const char = placedCharacters.find(c => c.slotId === slotId);
+        if (!char) return;
+        const newState = { ...battleState };
+        newState.locations[char.unitId.uuid] = {
+            vCol: updates.tile ? updates.tile.vCol : newState.locations[char.unitId.uuid].vCol,
+            vRow: updates.tile ? updates.tile.vRow : newState.locations[char.unitId.uuid].vRow,
+        };
+        newState.unitDetails[char.unitId.uuid] = {
+            rank: updates.rank ?? char.rank,
+            rarity: updates.rarity ?? char.rarity,
+            stars: updates.stars ?? char.stars,
+            activeLevel: updates.activeAbilityLevel ?? char.activeAbilityLevel,
+            passiveLevel: updates.passiveAbilityLevel ?? char.passiveAbilityLevel,
+            equipment: ['', '', ''],
+            equipmentLevel: [-1, -1, -1],
+            appliedUpgrades: [false, false, false, false, false, false],
+        };
+        setBattleState(newState);
         setPlacedCharacters(previous => previous.map(c => (c.slotId === slotId ? { ...c, ...updates } : c)));
     };
 
@@ -1479,25 +1650,19 @@ export const RaidHit = () => {
                             <CharacterSelect
                                 value={slot.charId}
                                 options={charOptions}
-                                onChange={newId => handleCharChange(slot.slotId, newId)}
+                                onChange={newId => handleCharChange(slot.slotId, slot.charId, newId)}
                             />
-                            <CompactSelect
-                                label="Rank"
+                            <RankCompactSelect
                                 value={String(slot.rank)}
                                 onChange={v => handleSlotUpdate(slot.slotId, { rank: Number(v) as Rank })}
-                                options={RANK_OPTIONS}
                             />
-                            <CompactSelect
-                                label="Rarity"
+                            <RarityCompactSelect
                                 value={String(slot.rarity)}
                                 onChange={v => handleSlotUpdate(slot.slotId, { rarity: Number(v) as Rarity })}
-                                options={RARITY_OPTIONS}
                             />
-                            <CompactSelect
-                                label="Stars"
+                            <StarsCompactSelect
                                 value={String(slot.stars)}
                                 onChange={v => handleSlotUpdate(slot.slotId, { stars: Number(v) as RarityStars })}
-                                options={STARS_OPTIONS}
                             />
                             <div className="flex flex-col gap-[3px]">
                                 <span className="font-[Rajdhani] text-[9px] font-semibold tracking-[0.1em] text-[#7a8099] uppercase">
@@ -1532,6 +1697,18 @@ export const RaidHit = () => {
                                     }
                                     className="w-[52px] rounded-[4px] border border-[#2e3352] bg-[#0b0c10] px-2 py-[5px] text-center text-[12px] text-[#d4d8e8] outline-none focus:border-[#c8a84b]"
                                 />
+                            </div>
+                            <div className="flex min-w-[90px] flex-col gap-[2px]">
+                                <span className="font-[Rajdhani] text-[9px] font-semibold tracking-[0.1em] text-[#7a8099] uppercase">
+                                    Stats
+                                </span>
+                                <div className="flex gap-2 text-[12px] text-[#d4d8e8]">
+                                    <span>Health: {BattleHelper.getHealthStat(battleState, slot.unitId)}</span>
+                                    <span>Damage: {BattleHelper.getDamageStat(battleState, slot.unitId)}</span>
+                                    <span>Armor: {BattleHelper.getArmorStat(battleState, slot.unitId)}</span>
+                                    <span>Crit Chance: {BattleHelper.getCritChance(battleState, slot.unitId)}</span>
+                                    <span>Crit Damage: {BattleHelper.getCritDamage(battleState, slot.unitId)}</span>
+                                </div>
                             </div>
                         </div>
                     );
