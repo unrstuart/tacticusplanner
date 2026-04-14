@@ -23,7 +23,6 @@ interface Props {
     widthClass?: string;
     compactRaidLocations?: boolean;
     showPlannedRaidLocationsOnly?: boolean;
-    tooltipRelatedCharactersOnly?: boolean;
 }
 
 const mowMap = new Map(mows2Data.mows.map(m => [m.snowprintId, m]));
@@ -68,10 +67,9 @@ const Component: React.FC<Props> = ({
     showAdditionalInfo = true,
     maxLocations,
     upgradeEstimate,
-    widthClass = 'w-67',
+    widthClass = 'w-76',
     compactRaidLocations = true,
     showPlannedRaidLocationsOnly = false,
-    tooltipRelatedCharactersOnly = false,
 }) => {
     const isShard = upgradeEstimate.rarity === 'Shard';
     const isMythicShard = upgradeEstimate.rarity === 'Mythic Shard';
@@ -118,25 +116,28 @@ const Component: React.FC<Props> = ({
 
     const noSuggestedRaidsRemaining = !hasSuggestedRaidsRemaining;
 
-    const iconTooltipContent = (
-        <div>
-            {!tooltipRelatedCharactersOnly && upgradeEstimate.label}
-            <ul className="ps-[15px]">
-                {relatedUnitTooltipNames.map(nameItem => (
-                    <li
-                        key={
-                            'material-item-input-' +
-                            upgradeEstimate.id +
-                            '-' +
-                            displayedLocations.map(loc => loc.id).join(',') +
-                            '-' +
-                            nameItem
-                        }>
-                        {nameItem}
-                    </li>
-                ))}
-            </ul>
-        </div>
+    const iconTooltipContent = useMemo(
+        () => (
+            <div>
+                {upgradeEstimate.label}
+                <ul className="ps-[15px]">
+                    {relatedUnitTooltipNames.map(nameItem => (
+                        <li
+                            key={
+                                'material-item-input-' +
+                                upgradeEstimate.id +
+                                '-' +
+                                displayedLocations.map(loc => loc.id).join(',') +
+                                '-' +
+                                nameItem
+                            }>
+                            {nameItem}
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        ),
+        [upgradeEstimate.label, upgradeEstimate.id, relatedUnitTooltipNames, displayedLocations]
     );
 
     const icon = useMemo(() => {
@@ -156,7 +157,7 @@ const Component: React.FC<Props> = ({
                 tooltip={iconTooltipContent}
             />
         );
-    }, [isShard, isMythicShard, resolvedUnit, materialId, upgradeEstimate.snowprintId]);
+    }, [isShard, isMythicShard, resolvedUnit, materialId, upgradeEstimate.snowprintId, iconTooltipContent]);
 
     const isSufficient = upgradeEstimate.acquiredCount >= upgradeEstimate.requiredCount;
     const flooredAcquiredCount = Math.min(Math.floor(upgradeEstimate.acquiredCount), upgradeEstimate.requiredCount);
@@ -164,20 +165,22 @@ const Component: React.FC<Props> = ({
 
     return (
         <div
-            className={`flex flex-col justify-between rounded-lg border border-gray-700 bg-gray-900 p-3 shadow-lg ${widthClass}`.trim()}>
-            <div className="flex w-full flex-row items-start!">
+            className={`flex flex-col justify-between rounded-lg border p-3 shadow-lg ${widthClass} border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--card-fg)] ${
+                noSuggestedRaidsRemaining ? 'opacity-80' : ''
+            }`.trim()}>
+            <div className="flex w-full flex-row items-start! text-inherit">
                 {/* Left: Icon, quantity */}
                 <div
-                    className={`flex h-full w-14 shrink-0 flex-col items-center justify-start gap-1 ${
+                    className={`flex w-14 shrink-0 flex-col items-center justify-start gap-1 ${
                         noSuggestedRaidsRemaining ? 'opacity-70' : ''
                     }`}>
                     <div className="mt-2 flex h-10 w-10 items-center justify-center">{icon}</div>
                     <span
-                        className={`mt-1 py-0.5 text-sm font-bold ${
+                        className={`mt-1 flex h-6 items-center text-sm font-bold text-inherit ${
                             noSuggestedRaidsRemaining
-                                ? 'text-gray-400'
+                                ? 'opacity-70'
                                 : showPlannedRaidLocationsOnly
-                                  ? 'text-gray-200'
+                                  ? ''
                                   : isSufficient
                                     ? 'text-green-400'
                                     : 'text-red-400'
@@ -187,18 +190,15 @@ const Component: React.FC<Props> = ({
                 </div>
 
                 {/* Right: Content */}
-                <div className="flex h-full min-w-0 flex-1 flex-col justify-start gap-2 pl-2">
+                <div className="flex min-w-0 flex-1 flex-col justify-start gap-2 pl-2">
                     <div className="flex items-center justify-between gap-1">
-                        <h4
-                            className={`mb-0 truncate text-xs font-normal ${
-                                noSuggestedRaidsRemaining ? 'text-gray-400' : 'text-gray-200'
-                            }`}>
+                        <h4 className={`mb-0 truncate text-xs font-normal text-inherit`}>
                             {name ?? upgradeEstimate.snowprintId}
                         </h4>
                     </div>
-                    {showRelatedCharacters && (
+                    {showRelatedCharacters && upgradeEstimate.relatedCharacters.length > 0 && (
                         <div
-                            className={`flex min-h-7 flex-row items-center gap-1 ${
+                            className={`flex flex-row items-center gap-1 ${
                                 noSuggestedRaidsRemaining ? 'opacity-70' : ''
                             }`}>
                             {upgradeEstimate.relatedCharacters.map(id => (
@@ -243,6 +243,7 @@ export const RaidUpgradeMaterialCard = memo(Component, (previous, next) => {
         previous.showAdditionalInfo === next.showAdditionalInfo &&
         previous.showRelatedCharacters === next.showRelatedCharacters &&
         previous.showPlannedRaidLocationsOnly === next.showPlannedRaidLocationsOnly &&
-        previous.tooltipRelatedCharactersOnly === next.tooltipRelatedCharactersOnly
+        previous.compactRaidLocations === next.compactRaidLocations &&
+        previous.widthClass === next.widthClass
     );
 });
