@@ -7,8 +7,6 @@ import { Rank } from '@/fsd/5-shared/model/enums/rank.enum';
 import { RarityStars } from '@/fsd/5-shared/model/enums/rarity-stars.enum';
 import { Rarity } from '@/fsd/5-shared/model/enums/rarity.enum';
 
-import rawEquipment from '@/fsd/4-entities/equipment/data/new-equipment-data.json';
-
 import rawAbilities from './data/abilities.json';
 import rawUnits from './data/heroes.json';
 import {
@@ -238,6 +236,9 @@ export class BattleHelper {
         equipmentLevel: number,
         crit: { chance: number; boost: number }
     ): void {
+        // TODO cpunerd - fix this
+        return;
+        /*
         const equipment = rawEquipment.find(item => item.id === equipmentId);
         if (!equipment) return;
         const level = equipmentLevel - 1;
@@ -251,7 +252,7 @@ export class BattleHelper {
                 return;
             }
             crit.chance = 1 - (1 - crit.chance / 100) * (1 - chance / 100);
-        }
+        }*/
     }
 
     public static getCritChance(state: IBattleState, unitId: IUnitId): number {
@@ -269,6 +270,8 @@ export class BattleHelper {
         equipmentLevel: number,
         crit: { damage: number; boost: number }
     ): void {
+        // TODO cpunerd - fix this
+        /*
         const equipment = rawEquipment.find(item => item.id === equipmentId);
         if (!equipment) return;
         const level = equipmentLevel - 1;
@@ -278,6 +281,7 @@ export class BattleHelper {
         } else if (equipment.type === 'I_Crit') {
             crit.damage += equipment.levels[level].stats.critDamage;
         }
+            */
     }
 
     public static getCritDamage(state: IBattleState, unitId: IUnitId): number {
