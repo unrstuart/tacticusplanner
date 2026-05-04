@@ -1,12 +1,13 @@
 ﻿import { cloneDeep } from 'lodash';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useContext, useEffect, useMemo, useState } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
 
 import { ICampaignsFilters } from 'src/models/interfaces';
 import { DispatchContext, StoreContext } from 'src/reducers/store.provider';
 import { RaidsHeader } from 'src/routes/tables/raids-header';
-import { RaidsPlan } from 'src/routes/tables/raids-plan';
 import { TodayRaids } from 'src/routes/tables/today-raids';
+
+const RaidsPlan = lazy(() => import('src/routes/tables/raids-plan').then(m => ({ default: m.RaidsPlan })));
 
 import { useAuth } from '@/fsd/5-shared/model';
 
@@ -15,7 +16,7 @@ import { MowsService } from '@/fsd/4-entities/mow';
 
 import { IUnit } from '@/fsd/3-features/characters/characters.models';
 import { ActiveGoalsDialog } from '@/fsd/3-features/goals/active-goals-dialog';
-import { CharacterRaidGoalSelect, IEstimatedUpgrades } from '@/fsd/3-features/goals/goals.models';
+import { IEstimatedUpgrades, TypedGoalSelect } from '@/fsd/3-features/goals/goals.models';
 import { GoalsService } from '@/fsd/3-features/goals/goals.service';
 import { LocationsFilter } from '@/fsd/3-features/goals/locations-filter';
 import { UpgradesService } from '@/fsd/3-features/goals/upgrades.service';
@@ -61,7 +62,7 @@ export const DailyRaids = () => {
         [inventory.upgrades, storeCharacters, resolvedMows]
     );
     const units = useMemo(() => [...storeCharacters, ...resolvedMows], [storeCharacters, resolvedMows]);
-    const { allGoals, shardsGoals, upgradeRankOrMowGoals } = useMemo(() => {
+    const { allGoals, shardsGoals, upgradeMaterialGoals, upgradeRankOrMowGoals } = useMemo(() => {
         return GoalsService.prepareGoals(goals, units, true);
     }, [goals, units]);
 
@@ -77,7 +78,7 @@ export const DailyRaids = () => {
         setCharSnowprintId(searchParams.get('charSnowprintId') ?? undefined);
     }, [location]);
 
-    const handleGoalsSelectionChange = (selection: CharacterRaidGoalSelect[]) => {
+    const handleGoalsSelectionChange = (selection: TypedGoalSelect[]) => {
         dispatch.goals({
             type: 'UpdateDailyRaids',
             value: selection.map(x => ({ goalId: x.goalId, include: x.include })),
@@ -132,6 +133,7 @@ export const DailyRaids = () => {
             },
             resolvedCharacters,
             resolvedMows,
+            ...upgradeMaterialGoals,
             ...upgradeRankOrMowGoals,
             ...shardsGoals
         );
@@ -161,6 +163,7 @@ export const DailyRaids = () => {
             },
             resolvedCharacters,
             resolvedMows,
+            ...upgradeMaterialGoals,
             ...upgradeRankOrMowGoals,
             ...shardsGoals
         );
@@ -191,13 +194,15 @@ export const DailyRaids = () => {
                 <LocationsFilter filter={dailyRaids.filters} filtersChange={saveFilterChanges} />
             </RaidsHeader>
 
-            <RaidsPlan
-                estimatedRanks={estimatedRanks}
-                upgrades={upgrades}
-                updateInventory={saveInventoryUpdateChanges}
-                updateInventoryAny={() => setHasChanges(true)}
-                scrollToCharSnowprintId={charSnowprintId ?? undefined}
-            />
+            <Suspense fallback={undefined}>
+                <RaidsPlan
+                    estimatedRanks={estimatedRanks}
+                    upgrades={upgrades}
+                    updateInventory={saveInventoryUpdateChanges}
+                    updateInventoryAny={() => setHasChanges(true)}
+                    scrollToCharSnowprintId={charSnowprintId ?? undefined}
+                />
+            </Suspense>
 
             {estimatedRanks.upgradesRaids.length > 0 && (
                 <TodayRaids

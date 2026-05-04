@@ -1,4 +1,4 @@
-﻿import { Warning } from '@mui/icons-material';
+import { Warning } from '@mui/icons-material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import GridViewIcon from '@mui/icons-material/GridView';
@@ -9,8 +9,7 @@ import TableRowsIcon from '@mui/icons-material/TableRows';
 import { Accordion, AccordionDetails, AccordionSummary, FormControlLabel, Switch } from '@mui/material';
 import Button from '@mui/material/Button';
 import { sum } from 'lodash';
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { isMobile } from 'react-device-detect';
+import React, { lazy, Suspense, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { DispatchContext, StoreContext } from '@/reducers/store.provider';
 import { formatDateWithOrdinal } from 'src/shared-logic/functions';
@@ -21,12 +20,12 @@ import { MiscIcon } from '@/fsd/5-shared/ui/icons';
 import { CharactersService } from '@/fsd/4-entities/character';
 
 import { IEstimatedUpgrades } from '@/fsd/3-features/goals/goals.models';
-import { MaterialsTable } from '@/fsd/3-features/goals/materials-table';
-import { RaidsDayView } from '@/fsd/3-features/goals/raids-day-view';
 
-import { Inventory } from '@/fsd/1-pages/input-inventory';
+import { DayStrip } from './raids-day-strip';
+import { MaterialsSectionContent } from './raids-materials-section';
+import { SectionAccordion } from './section-accordion';
 
-import { RaidUpgradeMaterialCard } from './raid-upgrade-material-card';
+const Inventory = lazy(() => import('@/fsd/1-pages/input-inventory').then(m => ({ default: m.Inventory })));
 
 interface Props {
     estimatedRanks: IEstimatedUpgrades;
@@ -46,7 +45,7 @@ export const RaidsPlan: React.FC<Props> = ({
     upgrades,
     updateInventory,
 }) => {
-    const { viewPreferences } = useContext(StoreContext);
+    const { viewPreferences, dailyRaidsPreferences } = useContext(StoreContext);
     const dispatch = useContext(DispatchContext);
     const [upgradesPaging, setUpgradesPaging] = useState<{
         start: number;
@@ -58,19 +57,23 @@ export const RaidsPlan: React.FC<Props> = ({
     const [grid2Loaded, setGrid2Loaded] = useState<boolean>(false);
     const [grid3Loaded, setGrid3Loaded] = useState<boolean>(false);
 
+    const [allDaysExpanded, setAllDaysExpanded] = useState(false);
+    const [outerExpanded, setOuterExpanded] = useState(scrollToCharSnowprintId !== undefined);
+
     const [expandedPanels, setExpandedPanels] = useState(() => ({
         related: false,
         inProgress: scrollToCharSnowprintId !== undefined,
         finished: false,
         blocked: false,
-        raids: true,
+        raids: false,
     }));
 
-    const togglePanel = (key: keyof typeof expandedPanels) => (_: any, isExpanded: boolean) =>
+    const togglePanel = (key: keyof typeof expandedPanels) => (_: React.SyntheticEvent, isExpanded: boolean) =>
         setExpandedPanels(previous => ({ ...previous, [key]: isExpanded }));
 
     const itemReferences = useRef<ReferenceMap>({});
     const inProgressReference = useRef<HTMLDivElement>(null);
+
     const setCardReference = useCallback(
         (id: number) => (element: ReferenceElement) => {
             itemReferences.current[id] = element;
@@ -88,12 +91,9 @@ export const RaidsPlan: React.FC<Props> = ({
         const characterIndexMap: CharacterToMaterialIndexMap = {};
 
         for (const [materialIndex, material] of estimatedRanks.inProgressMaterials.entries()) {
-            // Iterate over the related characters for the current material
             for (const fullName of material.relatedCharacters) {
                 const unit = CharactersService.getUnit(fullName);
                 if (!unit || !unit.snowprintId) continue;
-                // Check if this snowprintId has ALREADY been recorded.
-                // If it hasn't, this is the FIRST time we've seen it, so record the index.
                 if (!(unit.snowprintId in characterIndexMap)) {
                     characterIndexMap[unit.snowprintId] = materialIndex;
                 }
@@ -121,21 +121,20 @@ export const RaidsPlan: React.FC<Props> = ({
 
     useEffect(() => {
         if (scrollToCharSnowprintId !== undefined) {
+            setOuterExpanded(true);
             setExpandedPanels(previous => ({ ...previous, inProgress: true }));
         }
     }, [scrollToCharSnowprintId]);
 
     useEffect(() => {
         if (scrollToCharSnowprintId) {
-            // Use a brief delay to ensure the scrollable parent container and its content
-            // have finished rendering and measurement.
             const timer = setTimeout(() => {
                 scrollToTarget();
             }, 100);
 
-            return () => clearTimeout(timer); // Cleanup timer on unmount
+            return () => clearTimeout(timer);
         }
-    }, [scrollToCharSnowprintId, scrollToTarget]); // Rerun if the ID changes
+    }, [scrollToCharSnowprintId, scrollToTarget]);
 
     useEffect(() => {
         if (estimatedRanks.upgradesRaids.length > 3) {
@@ -173,6 +172,11 @@ export const RaidsPlan: React.FC<Props> = ({
         return Math.max(0, estimatedRanks.energyTotal - energyAlreadySpentToday);
     }, [estimatedRanks.energyTotal, estimatedRanks.upgradesRaids]);
 
+    const visibleDays = useMemo(
+        () => estimatedRanks.upgradesRaids.slice(upgradesPaging.start, upgradesPaging.end),
+        [estimatedRanks.upgradesRaids, upgradesPaging.start, upgradesPaging.end]
+    );
+
     const calendarDateTotal: string = useMemo(() => {
         const nextDate = new Date();
         nextDate.setDate(nextDate.getDate() + daysTotal - 1);
@@ -181,10 +185,16 @@ export const RaidsPlan: React.FC<Props> = ({
     }, [daysTotal]);
 
     return (
-        <Accordion defaultExpanded={scrollToCharSnowprintId !== undefined}>
-            <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Accordion
+            expanded={outerExpanded}
+            onChange={(_, isExpanded) => setOuterExpanded(isExpanded)}
+            disableGutters
+            className="my-5 overflow-hidden rounded-xl! border border-(--border) bg-transparent shadow-none">
+            <AccordionSummary
+                expandIcon={<ExpandMoreIcon className="text-(--muted-fg)" />}
+                className="px-4 py-0 [&_.MuiAccordionSummary-content]:my-1.5">
                 <FlexBox className="flex-col items-start">
-                    <div className="flex flex-wrap items-center gap-2" style={{ fontSize: isMobile ? 16 : 20 }}>
+                    <div className="flex flex-wrap items-center gap-2 text-base font-semibold sm:text-lg">
                         <span>
                             Raids plan (<b>{daysTotal}</b> Days |
                         </span>
@@ -205,13 +215,13 @@ export const RaidsPlan: React.FC<Props> = ({
                                 />
                             }
                             label={
-                                <div className="flex-box gap5">
+                                <div className="flex items-center gap-1">
                                     {viewPreferences.raidsTableView ? (
-                                        <div className="flex-box gap5">
+                                        <div className="flex items-center gap-1">
                                             <TableRowsIcon color="primary" /> <span>Table View</span>
                                         </div>
                                     ) : (
-                                        <div className="flex-box gap5">
+                                        <div className="flex items-center gap-1">
                                             <GridViewIcon color="primary" /> <span>Cards View</span>
                                         </div>
                                     )}
@@ -219,213 +229,158 @@ export const RaidsPlan: React.FC<Props> = ({
                             }
                         />
                     </div>
-                    <span className="italic">{calendarDateTotal}</span>
+                    <span className="text-sm text-(--muted-fg) italic">{calendarDateTotal}</span>
                 </FlexBox>
             </AccordionSummary>
-            <AccordionDetails>
+            <AccordionDetails className="p-0!">
                 {estimatedRanks.relatedUpgrades.length > 0 && (
-                    <Accordion
-                        TransitionProps={{ unmountOnExit: !grid1Loaded }}
+                    <SectionAccordion
                         expanded={expandedPanels.related}
-                        onChange={togglePanel('related')}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <div className="flex flex-wrap items-center gap-2" style={{ fontSize: isMobile ? 16 : 20 }}>
+                        onChange={togglePanel('related')}
+                        transitionProps={{ unmountOnExit: true }}
+                        summary={
+                            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold sm:text-base">
                                 <InventoryIcon />
                                 <b>{estimatedRanks.relatedUpgrades.length}</b> related upgrades (Inventory)
                             </div>
-                        </AccordionSummary>
-                        <AccordionDetails>
+                        }>
+                        <Suspense fallback={undefined}>
                             <Inventory itemsFilter={estimatedRanks.relatedUpgrades} onUpdate={updateInventoryAny} />
-                        </AccordionDetails>
-                    </Accordion>
+                        </Suspense>
+                    </SectionAccordion>
                 )}
                 {estimatedRanks.inProgressMaterials.length > 0 && (
-                    <Accordion
+                    <SectionAccordion
                         ref={inProgressReference}
                         expanded={expandedPanels.inProgress}
                         onChange={togglePanel('inProgress')}
-                        TransitionProps={{ unmountOnExit: !grid1Loaded }}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <div className="flex flex-wrap items-center gap-2" style={{ fontSize: isMobile ? 16 : 20 }}>
+                        transitionProps={{ unmountOnExit: !grid1Loaded }}
+                        summary={
+                            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold sm:text-base">
                                 <PendingIcon color={'primary'} />
                                 <b>{estimatedRanks.inProgressMaterials.length}</b> in progress upgrades
                             </div>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <div className="h-[600px] overflow-y-auto">
-                                {viewPreferences.raidsTableView === true ? (
-                                    <div className="ag-theme-material flex h-[600px] min-h-[150px] w-full flex-col">
-                                        <MaterialsTable
-                                            rows={estimatedRanks.inProgressMaterials}
-                                            updateMaterialQuantity={updateInventory}
-                                            onGridReady={() => setGrid1Loaded(true)}
-                                            inventory={upgrades}
-                                            scrollToCharSnowprintId={scrollToCharSnowprintId}
-                                            alreadyUsedMaterials={estimatedRanks.finishedMaterials}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="flex max-h-[600px] w-full flex-wrap gap-x-4 gap-y-4 overflow-y-auto p-2">
-                                        {estimatedRanks.inProgressMaterials.length > 0 &&
-                                            estimatedRanks.inProgressMaterials.map((material, index) => (
-                                                <div key={index} ref={setCardReference(index)}>
-                                                    <RaidUpgradeMaterialCard
-                                                        key={index}
-                                                        index={index}
-                                                        upgradeEstimate={material}
-                                                    />
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-                        </AccordionDetails>
-                    </Accordion>
+                        }>
+                        <MaterialsSectionContent
+                            materials={estimatedRanks.inProgressMaterials}
+                            tableView={viewPreferences.raidsTableView === true}
+                            updateInventory={updateInventory}
+                            inventory={upgrades}
+                            onGridReady={() => setGrid1Loaded(true)}
+                            scrollToCharSnowprintId={scrollToCharSnowprintId}
+                            alreadyUsedMaterials={estimatedRanks.finishedMaterials}
+                            cardRefCallback={setCardReference}
+                        />
+                    </SectionAccordion>
                 )}
                 {estimatedRanks.finishedMaterials.length > 0 && (
-                    <Accordion
-                        TransitionProps={{ unmountOnExit: !grid3Loaded }}
+                    <SectionAccordion
                         expanded={expandedPanels.finished}
-                        onChange={togglePanel('finished')}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <div className="flex flex-wrap items-center gap-2" style={{ fontSize: isMobile ? 16 : 20 }}>
+                        onChange={togglePanel('finished')}
+                        transitionProps={{ unmountOnExit: !grid3Loaded }}
+                        summary={
+                            <div className="flex flex-wrap items-center gap-2 text-sm font-semibold sm:text-base">
                                 <CheckCircleIcon color={'success'} /> <b>{estimatedRanks.finishedMaterials.length}</b>{' '}
                                 finished upgrades
                             </div>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <div className="max-h-[600px] overflow-y-auto">
-                                {viewPreferences.raidsTableView === true ? (
-                                    <div className="ag-theme-material flex h-[600px] w-full flex-col">
-                                        <MaterialsTable
-                                            rows={estimatedRanks.finishedMaterials}
-                                            updateMaterialQuantity={updateInventory}
-                                            onGridReady={() => setGrid3Loaded(true)}
-                                            inventory={upgrades}
-                                        />
-                                    </div>
-                                ) : (
-                                    <div className="flex max-h-[600px] w-full flex-wrap gap-1 p-2">
-                                        <div className="flex flex-wrap gap-x-4 gap-y-4">
-                                            {estimatedRanks.finishedMaterials.map((material, index) => (
-                                                <RaidUpgradeMaterialCard
-                                                    key={index}
-                                                    index={index}
-                                                    upgradeEstimate={material}
-                                                    showAdditionalInfo={false}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        </AccordionDetails>
-                    </Accordion>
+                        }>
+                        <MaterialsSectionContent
+                            materials={estimatedRanks.finishedMaterials}
+                            tableView={viewPreferences.raidsTableView === true}
+                            updateInventory={updateInventory}
+                            inventory={upgrades}
+                            onGridReady={() => setGrid3Loaded(true)}
+                            showAdditionalInfo={false}
+                        />
+                    </SectionAccordion>
                 )}
                 {estimatedRanks.blockedMaterials.length > 0 && (
-                    <Accordion
-                        TransitionProps={{ unmountOnExit: !grid2Loaded }}
+                    <SectionAccordion
                         expanded={expandedPanels.blocked}
-                        onChange={togglePanel('blocked')}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+                        onChange={togglePanel('blocked')}
+                        transitionProps={{ unmountOnExit: !grid2Loaded }}
+                        summary={
                             <AccessibleTooltip
                                 title={`You don't any have location for ${estimatedRanks.blockedMaterials.length} upgrades`}>
-                                <div
-                                    className="flex flex-wrap items-center gap-2"
-                                    style={{ fontSize: isMobile ? 16 : 20 }}>
+                                <div className="flex flex-wrap items-center gap-2 text-sm font-semibold sm:text-base">
                                     <Warning color={'warning'} />
                                     <b>{estimatedRanks.blockedMaterials.length}</b> blocked upgrades
                                 </div>
                             </AccessibleTooltip>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <div className="flex flex-col">
-                                <div className="flex-box p-2">
-                                    <InfoIcon color="primary" /> You don&apos;t have available campaigns nodes for the
-                                    items listed in the table below
-                                </div>
-
-                                <div className="grow">
-                                    {viewPreferences.raidsTableView === true ? (
-                                        <div className="ag-theme-material flex h-[600px] w-full flex-col">
-                                            <MaterialsTable
-                                                rows={estimatedRanks.blockedMaterials}
-                                                updateMaterialQuantity={updateInventory}
-                                                onGridReady={() => setGrid2Loaded(true)}
-                                                inventory={upgrades}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className="flex max-h-[600px] w-full flex-wrap gap-1 overflow-y-scroll p-2">
-                                            <div className="flex flex-wrap gap-x-4 gap-y-4">
-                                                {estimatedRanks.blockedMaterials.map((material, index) => (
-                                                    <RaidUpgradeMaterialCard
-                                                        key={index}
-                                                        index={index}
-                                                        upgradeEstimate={material}
-                                                        showAdditionalInfo={false}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                        }>
+                        <div className="flex flex-col">
+                            <div className="flex items-center gap-2 p-2">
+                                <InfoIcon color="primary" /> You don&apos;t have available campaigns nodes for the items
+                                listed in the table below
                             </div>
-                        </AccordionDetails>
-                    </Accordion>
+                            <div className="grow">
+                                <MaterialsSectionContent
+                                    materials={estimatedRanks.blockedMaterials}
+                                    tableView={viewPreferences.raidsTableView === true}
+                                    updateInventory={updateInventory}
+                                    inventory={upgrades}
+                                    onGridReady={() => setGrid2Loaded(true)}
+                                    showAdditionalInfo={false}
+                                />
+                            </div>
+                        </div>
+                    </SectionAccordion>
                 )}
 
                 {estimatedRanks.upgradesRaids.length > 0 && (
-                    <Accordion
-                        TransitionProps={{ unmountOnExit: !upgradesPaging.completed }}
+                    <SectionAccordion
                         expanded={expandedPanels.raids}
-                        onChange={togglePanel('raids')}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                            <FlexBox className="flex-col items-start">
-                                <div className="flex-box gap5 wrap" style={{ fontSize: isMobile ? 16 : 20 }}>
+                        onChange={togglePanel('raids')}
+                        transitionProps={{ unmountOnExit: !upgradesPaging.completed }}
+                        summary={
+                            <div className="flex w-full flex-col gap-1">
+                                <span className="text-sm font-semibold sm:text-base">Daily Raids</span>
+                                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-(--muted-fg)">
                                     <span>
-                                        Raids Plan (<b>{estimatedRanks.upgradesRaids.length}</b> Days |
+                                        <b className="text-(--card-fg)">{estimatedRanks.upgradesRaids.length}</b> days
                                     </span>
-                                    <span>
-                                        <b>{estimatedRanks.freeEnergyDays}</b> Unused{' '}
-                                        <MiscIcon icon={'energy'} height={15} width={15} /> Days |
+                                    <span className="flex items-center gap-1">
+                                        <b className="text-(--card-fg)">{energyTotal}</b>
+                                        <MiscIcon icon={'energy'} height={13} width={13} />
                                     </span>
-                                    <span>
-                                        <b>{energyTotal}</b> <MiscIcon icon={'energy'} height={15} width={15} /> |
+                                    <span className="flex items-center gap-1">
+                                        <b className="text-(--card-fg)">{estimatedRanks.raidsTotal}</b>
+                                        <MiscIcon icon={'raidTicket'} height={13} width={13} />
                                     </span>
-                                    <span>
-                                        <b>{estimatedRanks.raidsTotal}</b> Raids)
+                                    <span className="flex items-center gap-1">
+                                        <b className="text-(--card-fg)">{estimatedRanks.freeEnergyDays}</b> days unused
+                                        <MiscIcon icon={'energy'} height={13} width={13} />
                                     </span>
-                                </div>
-                                <span className="italic">{upgradesCalendarDate}</span>
-                            </FlexBox>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <div className="overflow-x-auto overflow-y-hidden" style={{ transform: 'rotateX(180deg)' }}>
-                                <div className="flex gap-2.5" style={{ transform: 'rotateX(180deg)' }}>
-                                    {estimatedRanks.upgradesRaids
-                                        .slice(upgradesPaging.start, upgradesPaging.end)
-                                        .map((day, index) => {
-                                            return <RaidsDayView key={index} day={day} title={'Day ' + (index + 1)} />;
-                                        })}
-                                    {!upgradesPaging.completed && (
+                                    <span className="italic">{upgradesCalendarDate}</span>
+                                    {expandedPanels.raids && (
                                         <Button
-                                            variant={'outlined'}
-                                            className="min-w-[300px] items-start pt-5"
-                                            onClick={() =>
-                                                setUpgradesPaging({
-                                                    start: 0,
-                                                    end: estimatedRanks.upgradesRaids.length,
-                                                    completed: true,
-                                                })
-                                            }>
-                                            Show All
+                                            size="small"
+                                            variant="outlined"
+                                            onClick={event => {
+                                                event.stopPropagation();
+                                                setAllDaysExpanded(v => !v);
+                                            }}>
+                                            {allDaysExpanded ? 'Collapse cards' : 'Expand cards'}
                                         </Button>
                                     )}
                                 </div>
                             </div>
-                        </AccordionDetails>
-                    </Accordion>
+                        }>
+                        <DayStrip
+                            days={visibleDays}
+                            allDays={estimatedRanks.upgradesRaids}
+                            allDaysExpanded={allDaysExpanded}
+                            energyPerDay={dailyRaidsPreferences.dailyEnergy}
+                            showShowAll={!upgradesPaging.completed}
+                            onShowAll={() =>
+                                setUpgradesPaging({
+                                    start: 0,
+                                    end: estimatedRanks.upgradesRaids.length,
+                                    completed: true,
+                                })
+                            }
+                        />
+                    </SectionAccordion>
                 )}
             </AccordionDetails>
         </Accordion>

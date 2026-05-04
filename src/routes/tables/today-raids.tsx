@@ -1,13 +1,15 @@
-﻿import { ExpandMore } from '@mui/icons-material';
+﻿import { ExpandMore as ExpandMoreIcon } from '@mui/icons-material';
 import { Accordion, AccordionDetails, AccordionSummary } from '@mui/material';
 import { sum } from 'lodash';
-import { isMobile } from 'react-device-detect';
-
-import { RaidUpgradeMaterialCard } from '@/routes/tables/raid-upgrade-material-card';
+import { FC, lazy, Suspense } from 'react';
 
 import { MiscIcon } from '@/fsd/5-shared/ui/icons';
 
 import { IUpgradeRaid } from '@/fsd/3-features/goals/goals.models';
+
+const RaidUpgradeMaterialCard = lazy(() =>
+    import('@/routes/tables/raid-upgrade-material-card').then(m => ({ default: m.RaidUpgradeMaterialCard }))
+);
 
 interface Props {
     raids: IUpgradeRaid[];
@@ -16,7 +18,7 @@ interface Props {
 
 const isShardRaid = (raid: IUpgradeRaid) => raid.rarity === 'Shard' || raid.rarity === 'Mythic Shard';
 
-export const TodayRaids: React.FC<Props> = ({ raids, bonusRaids }: Props) => {
+export const TodayRaids: FC<Props> = ({ raids, bonusRaids }) => {
     const locs = raids.flatMap(raid => raid.raidLocations);
     const energySpent = sum(locs.map(loc => loc.raidsAlreadyPerformed * loc.energyCost));
     const raidsCount = sum(locs.map(loc => loc.raidsAlreadyPerformed));
@@ -32,67 +34,77 @@ export const TodayRaids: React.FC<Props> = ({ raids, bonusRaids }: Props) => {
 
     return (
         <>
-            <Accordion defaultExpanded={true}>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                    <p style={{ fontSize: isMobile ? 16 : 20 }}>
+            <Accordion
+                defaultExpanded={true}
+                disableGutters
+                className="mt-2 overflow-hidden rounded-xl! border border-(--border) bg-transparent shadow-none">
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon className="text-(--muted-fg)" />}
+                    className="px-4 py-0 [&_.MuiAccordionSummary-content]:my-1.5">
+                    <span className="text-sm font-semibold sm:text-base">
                         Today (<b>{energySpent}</b> <MiscIcon icon={'energy'} height={15} width={15} /> spent |{' '}
                         <b>{raidsCount}</b> raids done)
-                    </p>
+                    </span>
                 </AccordionSummary>
-                <AccordionDetails>
-                    <div className="m-2.5 flex flex-wrap items-start justify-center gap-2">
-                        {upgradesRaids.map((raid, index) => (
-                            <RaidUpgradeMaterialCard
-                                key={raid.id + '-' + index}
-                                index={index}
-                                upgradeEstimate={raid}
-                                showRelatedCharacters={false}
-                                showAdditionalInfo={false}
-                                showPlannedRaidLocationsOnly={true}
-                            />
-                        ))}
-                        {completedMaterialRaids.map((raid, index) => (
-                            <RaidUpgradeMaterialCard
-                                key={raid.id + '-' + index}
-                                index={index}
-                                upgradeEstimate={raid}
-                                showRelatedCharacters={false}
-                                showAdditionalInfo={false}
-                                showPlannedRaidLocationsOnly={true}
-                            />
-                        ))}
-                        {completedShardRaids.map((raid, index) => (
-                            <RaidUpgradeMaterialCard
-                                key={raid.id + '-' + index}
-                                index={index}
-                                upgradeEstimate={raid}
-                                showRelatedCharacters={false}
-                                showAdditionalInfo={false}
-                                showPlannedRaidLocationsOnly={true}
-                            />
-                        ))}
-                    </div>
+                <AccordionDetails className="px-4 pt-0 pb-4">
+                    <Suspense fallback={undefined}>
+                        <div className="m-2.5 flex flex-wrap items-start justify-center gap-2">
+                            {upgradesRaids.map((raid, index) => (
+                                <RaidUpgradeMaterialCard
+                                    key={raid.id + '-' + index}
+                                    upgradeEstimate={raid}
+                                    showRelatedCharacters={false}
+                                    showAdditionalInfo={false}
+                                    showPlannedRaidLocationsOnly={true}
+                                />
+                            ))}
+                            {completedMaterialRaids.map((raid, index) => (
+                                <RaidUpgradeMaterialCard
+                                    key={raid.id + '-' + index}
+                                    upgradeEstimate={raid}
+                                    showRelatedCharacters={false}
+                                    showAdditionalInfo={false}
+                                    showPlannedRaidLocationsOnly={true}
+                                />
+                            ))}
+                            {completedShardRaids.map((raid, index) => (
+                                <RaidUpgradeMaterialCard
+                                    key={raid.id + '-' + index}
+                                    upgradeEstimate={raid}
+                                    showRelatedCharacters={false}
+                                    showAdditionalInfo={false}
+                                    showPlannedRaidLocationsOnly={true}
+                                />
+                            ))}
+                        </div>
+                    </Suspense>
                 </AccordionDetails>
             </Accordion>
-            <Accordion>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                    <p style={{ fontSize: isMobile ? 16 : 20 }}>
+            <Accordion
+                slotProps={{ transition: { unmountOnExit: true } }}
+                disableGutters
+                className="my-5 overflow-hidden rounded-xl! border border-(--border) bg-transparent shadow-none">
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon className="text-(--muted-fg)" />}
+                    className="px-4 py-0 [&_.MuiAccordionSummary-content]:my-1.5">
+                    <span className="text-sm font-semibold sm:text-base">
                         Bonus Raids (when you have extra energy <MiscIcon icon={'energy'} height={15} width={15} />)
-                    </p>
+                    </span>
                 </AccordionSummary>
-                <AccordionDetails>
-                    <div className="m-2.5 flex flex-wrap items-start justify-center gap-2">
-                        {bonusRaids.map((raid, index) => (
-                            <RaidUpgradeMaterialCard
-                                key={raid.id + '-' + index}
-                                index={index}
-                                upgradeEstimate={raid}
-                                showRelatedCharacters={false}
-                                showAdditionalInfo={false}
-                                showPlannedRaidLocationsOnly={true}
-                            />
-                        ))}
-                    </div>
+                <AccordionDetails className="px-4 pt-0 pb-4">
+                    <Suspense fallback={undefined}>
+                        <div className="m-2.5 flex flex-wrap items-start justify-center gap-2">
+                            {bonusRaids.map((raid, index) => (
+                                <RaidUpgradeMaterialCard
+                                    key={raid.id + '-' + index}
+                                    upgradeEstimate={raid}
+                                    showRelatedCharacters={false}
+                                    showAdditionalInfo={false}
+                                    showPlannedRaidLocationsOnly={true}
+                                />
+                            ))}
+                        </div>
+                    </Suspense>
                 </AccordionDetails>
             </Accordion>
         </>
